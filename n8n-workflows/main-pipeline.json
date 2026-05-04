@@ -1,0 +1,133 @@
+{
+  "name": "Architecture Video Generator Pipeline",
+  "nodes": [
+    {
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "path": "arch-pipeline",
+        "responseMode": "lastNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Download Image from S3",
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "operation": "get",
+        "bucket": "={{ $json.bucket }}",
+        "key": "={{ $json.image_key }}"
+      }
+    },
+    {
+      "name": "Vision API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/jobs/{{ $json.job_id }}/vision",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "image_base64", "value": "={{ $json.image_base64 }}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Prompt Writer (DeepSeek)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/jobs/{{ $json.job_id }}/prompts",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "style_analysis", "value": "={{ $json.style_analysis }}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Image Generation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/jobs/{{ $json.job_id }}/images",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "prompt", "value": "={{ $json.image_prompt }}" },
+            { "name": "negative", "value": "={{ $json.negative_prompt }}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Video Generation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1050, 400],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/jobs/{{ $json.job_id }}/video",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "image_url", "value": "={{ $json.images[0] }}" },
+            { "name": "prompt", "value": "={{ $json.video_prompt }}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Caption Writer (DeepSeek)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/jobs/{{ $json.job_id }}/captions",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "style_analysis", "value": "={{ $json.style_analysis }}" },
+            { "name": "platforms", "value": "={{ $json.platforms }}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Upload to S3",
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 1,
+      "position": [1450, 300],
+      "parameters": {
+        "operation": "put",
+        "bucket": "={{ $json.bucket }}",
+        "key": "={{ $json.job_id }}/output.json",
+        "content": "={{ $json }}"
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[ { "node": "Download Image from S3", "type": "main", "index": 0 } ]] },
+    "Download Image from S3": { "main": [[ { "node": "Vision API", "type": "main", "index": 0 } ]] },
+    "Vision API": { "main": [[ { "node": "Prompt Writer (DeepSeek)", "type": "main", "index": 0 } ]] },
+    "Prompt Writer (DeepSeek)": { "main": [[ { "node": "Image Generation", "type": "main", "index": 0 }, { "node": "Video Generation", "type": "main", "index": 0 } ]] },
+    "Image Generation": { "main": [[ { "node": "Caption Writer (DeepSeek)", "type": "main", "index": 0 } ]] },
+    "Video Generation": { "main": [[ { "node": "Caption Writer (DeepSeek)", "type": "main", "index": 0 } ]] },
+    "Caption Writer (DeepSeek)": { "main": [[ { "node": "Upload to S3", "type": "main", "index": 0 } ]] }
+  }
+}

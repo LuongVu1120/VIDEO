@@ -1,0 +1,256 @@
+{
+  "total_videos_analyzed": 9,
+  "folder_analyzed": "D:\\TU_DONG_DANG_VIDEO\\VIDEO",
+  "camera_movement_distribution": [
+    [
+      "slow push-in",
+      8
+    ],
+    [
+      "gentle pull-out",
+      1
+    ]
+  ],
+  "dominant_camera_movement": "slow push-in",
+  "movement_speed_distribution": [
+    [
+      "slow",
+      8
+    ],
+    [
+      "very slow",
+      1
+    ]
+  ],
+  "dominant_speed": "slow",
+  "pacing_distribution": [
+    [
+      "relaxed",
+      9
+    ]
+  ],
+  "dominant_pacing": "relaxed",
+  "transition_distribution": [
+    [
+      "none - single shot",
+      5
+    ],
+    [
+      "cut",
+      4
+    ]
+  ],
+  "dominant_transition": "none - single shot",
+  "perspective_distribution": [
+    [
+      "eye-level",
+      9
+    ]
+  ],
+  "dominant_perspective": "eye-level",
+  "atmosphere_distribution": [
+    [
+      "cinematic",
+      5
+    ],
+    [
+      "real estate tour",
+      4
+    ]
+  ],
+  "dominant_atmosphere": "cinematic",
+  "video_quality_distribution": [
+    [
+      "high",
+      6
+    ],
+    [
+      "ultra high",
+      3
+    ]
+  ],
+  "depth_of_field_distribution": [
+    [
+      "medium",
+      9
+    ]
+  ],
+  "style_distribution": [
+    [
+      "Modern Minimalist",
+      6
+    ],
+    [
+      "Unknown",
+      2
+    ],
+    [
+      "Contemporary",
+      1
+    ]
+  ],
+  "dominant_style": "Modern Minimalist",
+  "materials": [
+    [
+      "e",
+      15
+    ],
+    [
+      "o",
+      14
+    ],
+    [
+      " ",
+      14
+    ],
+    [
+      "s",
+      14
+    ],
+    [
+      ",",
+      13
+    ],
+    [
+      "l",
+      12
+    ],
+    [
+      "t",
+      10
+    ],
+    [
+      "a",
+      9
+    ]
+  ],
+  "colors": [
+    [
+      " ",
+      27
+    ],
+    [
+      "t",
+      20
+    ],
+    [
+      "a",
+      19
+    ],
+    [
+      "e",
+      18
+    ],
+    [
+      "r",
+      13
+    ],
+    [
+      "l",
+      13
+    ],
+    [
+      "o",
+      13
+    ],
+    [
+      ",",
+      12
+    ]
+  ],
+  "lighting_conditions": [
+    [
+      "Unknown",
+      2
+    ],
+    [
+      "Soft ambient lighting with ceiling lights",
+      1
+    ],
+    [
+      "Evening/Night, Warm Interior Lighting",
+      1
+    ],
+    [
+      "Soft, Warm",
+      1
+    ],
+    [
+      "Warm interior lighting, evening ambient",
+      1
+    ],
+    [
+      "Soft, Even lighting, Evening",
+      1
+    ],
+    [
+      "Natural, Soft Warm Interiors",
+      1
+    ],
+    [
+      "Soft natural light",
+      1
+    ]
+  ],
+  "mood_distribution": [
+    [
+      "Cozy, Tranquil",
+      3
+    ],
+    [
+      "Unknown",
+      2
+    ],
+    [
+      "Calm and inviting",
+      1
+    ],
+    [
+      "Cozy and serene",
+      1
+    ],
+    [
+      "Calm, Inviting",
+      1
+    ],
+    [
+      "Calm and serene",
+      1
+    ]
+  ],
+  "environments": [
+    [
+      "Unknown",
+      2
+    ],
+    [
+      "Lush greenery, garden setting",
+      1
+    ],
+    [
+      "Forest, Mountainous",
+      1
+    ],
+    [
+      "Forest, Mountains",
+      1
+    ],
+    [
+      "Forest with mountain backdrop",
+      1
+    ],
+    [
+      "Suburban green space",
+      1
+    ],
+    [
+      "Garden Setting",
+      1
+    ],
+    [
+      "Lush greenery and trees",
+      1
+    ]
+  ],
+  "video_style_description": "The preferred video style uses slow push-in camera movement at a slow speed, creating a relaxed pacing throughout. Transitions are typically none - single shot, shot from eye-level perspective. The overall atmosphere is cinematic and professional."
+}

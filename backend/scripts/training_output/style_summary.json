@@ -1,0 +1,267 @@
+{
+  "total_images_analyzed": 86,
+  "folders_analyzed": [
+    "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1",
+    "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2"
+  ],
+  "style_distribution": [
+    [
+      "Contemporary",
+      41
+    ],
+    [
+      "Modern Minimalist",
+      26
+    ],
+    [
+      "Neoclassical",
+      10
+    ],
+    [
+      "Mediterranean",
+      7
+    ],
+    [
+      "Spanish Revival",
+      1
+    ],
+    [
+      "Modern Farmhouse",
+      1
+    ]
+  ],
+  "dominant_style": "Contemporary",
+  "materials": [
+    [
+      "glass",
+      86
+    ],
+    [
+      "wood",
+      69
+    ],
+    [
+      "stone",
+      33
+    ],
+    [
+      "metal",
+      29
+    ],
+    [
+      "steel",
+      24
+    ],
+    [
+      "concrete",
+      14
+    ],
+    [
+      "brick",
+      13
+    ],
+    [
+      "stucco",
+      8
+    ],
+    [
+      "clay tiles",
+      5
+    ],
+    [
+      "terracotta",
+      2
+    ]
+  ],
+  "top_materials": [
+    "glass",
+    "wood",
+    "stone",
+    "metal",
+    "steel"
+  ],
+  "colors": [
+    [
+      "white",
+      57
+    ],
+    [
+      "black",
+      54
+    ],
+    [
+      "gray",
+      26
+    ],
+    [
+      "green",
+      25
+    ],
+    [
+      "natural wood",
+      12
+    ],
+    [
+      "beige",
+      11
+    ],
+    [
+      "brown",
+      8
+    ],
+    [
+      "terracotta",
+      6
+    ],
+    [
+      "#FFFFFF",
+      6
+    ],
+    [
+      "#000000",
+      6
+    ]
+  ],
+  "primary_palette": [
+    "white",
+    "black",
+    "gray",
+    "green",
+    "natural wood",
+    "beige"
+  ],
+  "lighting_conditions": [
+    [
+      "natural",
+      61
+    ],
+    [
+      "warm",
+      16
+    ],
+    [
+      "soft",
+      6
+    ],
+    [
+      "soft and warm",
+      1
+    ],
+    [
+      "soft natural",
+      1
+    ],
+    [
+      "soft, natural",
+      1
+    ]
+  ],
+  "dominant_lighting": "natural",
+  "mood_distribution": [
+    [
+      "peaceful",
+      57
+    ],
+    [
+      "luxurious",
+      19
+    ],
+    [
+      "cozy",
+      9
+    ],
+    [
+      "peaceful and cozy",
+      1
+    ]
+  ],
+  "dominant_mood": "peaceful",
+  "architecture_types": [
+    [
+      "house",
+      86
+    ]
+  ],
+  "environments": [
+    [
+      "suburban",
+      43
+    ],
+    [
+      "natural",
+      43
+    ]
+  ],
+  "key_features": [
+    [
+      "large windows",
+      42
+    ],
+    [
+      "flat roof",
+      15
+    ],
+    [
+      "symmetrical design",
+      14
+    ],
+    [
+      "landscaped garden",
+      14
+    ],
+    [
+      "large glass windows",
+      13
+    ],
+    [
+      "stone facade",
+      10
+    ],
+    [
+      "balcony",
+      10
+    ],
+    [
+      "minimalist landscaping",
+      9
+    ],
+    [
+      "gabled roof",
+      8
+    ],
+    [
+      "outdoor seating area",
+      8
+    ],
+    [
+      "wooden deck",
+      8
+    ],
+    [
+      "symmetrical facade",
+      6
+    ],
+    [
+      "arched windows",
+      6
+    ],
+    [
+      "fire pit",
+      6
+    ],
+    [
+      "stone chimney",
+      6
+    ]
+  ],
+  "top_key_features": [
+    "large windows",
+    "flat roof",
+    "symmetrical design",
+    "landscaped garden",
+    "large glass windows",
+    "stone facade",
+    "balcony",
+    "minimalist landscaping"
+  ]
+}

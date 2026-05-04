@@ -1,0 +1,64 @@
+{
+  "name": "Social Media Auto Posting",
+  "nodes": [
+    {
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "parameters": {
+        "path": "social-post",
+        "responseMode": "lastNode",
+        "options": {}
+      }
+    },
+    {
+      "name": "Buffer Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.bufferapp.com/1/updates/create.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "text", "value": "={{ $json.caption }}" },
+            { "name": "profile_ids", "value": "={{ $json.profile_ids }}" },
+            { "name": "media", "value": "={{ $json.media_url }}" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Instagram Post",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [450, 450],
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v19.0/{{ $json.instagram_id }}/media",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "image_url", "value": "={{ $json.image_url }}" },
+            { "name": "caption", "value": "={{ $json.caption }}" },
+            { "name": "access_token", "value": "={{ $json.access_token }}" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[
+        { "node": "Buffer Post", "type": "main", "index": 0 },
+        { "node": "Instagram Post", "type": "main", "index": 0 }
+      ]]
+    }
+  }
+}

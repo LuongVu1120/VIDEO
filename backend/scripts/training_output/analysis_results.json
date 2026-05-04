@@ -1,0 +1,2101 @@
+{
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\1.png": {
+    "style": "Neoclassical",
+    "materials": [
+      "stone",
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "white",
+      "gray",
+      "warm brown"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "symmetrical design",
+      "arched doorway",
+      "large windows",
+      "stone facade",
+      "landscaped pathway"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\2.png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "black",
+      "white",
+      "gray",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "gabled roof",
+      "large windows",
+      "chimney",
+      "landscaped garden",
+      "arched garage door"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\3.png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "gray",
+      "white",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "stone facade",
+      "greenery",
+      "sloped roof"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (1).png": {
+    "style": "Neoclassical",
+    "materials": [
+      "stone",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "beige",
+      "black",
+      "brown",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "symmetrical facade",
+      "arched doorway",
+      "stone facade",
+      "large windows",
+      "manicured landscaping"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (10).png": {
+    "style": "Mediterranean",
+    "materials": [
+      "stucco",
+      "terracotta",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "white",
+      "terracotta",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "terracotta roof tiles",
+      "arched entryway",
+      "white stucco walls",
+      "large windows",
+      "climbing vines"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (11).png": {
+    "style": "Spanish Revival",
+    "materials": [
+      "stucco",
+      "clay tiles",
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "white",
+      "terracotta",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "red clay tile roof",
+      "stucco walls",
+      "arched doorway",
+      "ornamental details",
+      "vines climbing the facade",
+      "large windows"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (12).png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "wood",
+      "glass",
+      "plaster"
+    ],
+    "colors": [
+      "warm beige",
+      "light brown",
+      "natural stone gray",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "stone facade",
+      "wooden shutters",
+      "large glass doors",
+      "tiled roof",
+      "landscaped greenery",
+      "palm trees"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (13).png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "white",
+      "beige",
+      "brown",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "stone facade",
+      "wooden elements",
+      "sliding glass doors",
+      "open balcony",
+      "tiled roof"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (14).png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "beige",
+      "brown",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "sliding glass doors",
+      "stone facade",
+      "wooden roof",
+      "balcony",
+      "palm trees"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (15).png": {
+    "style": "Mediterranean",
+    "materials": [
+      "stucco",
+      "terracotta tiles",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "terracotta",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched doorways",
+      "terracotta roof",
+      "white stucco walls",
+      "landscaped garden",
+      "iron framed windows",
+      "vines"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (16).png": {
+    "style": "Mediterranean",
+    "materials": [
+      "stucco",
+      "clay tiles",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "#FFFFFF",
+      "#D2691E",
+      "#556B2F",
+      "#708090"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "clay tile roof",
+      "arched entryway",
+      "iron light fixtures",
+      "symmetrical windows",
+      "vines and greenery"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (17).png": {
+    "style": "Mediterranean",
+    "materials": [
+      "stucco",
+      "terracotta",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "white",
+      "terracotta",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched windows",
+      "terracotta roof tiles",
+      "stucco walls",
+      "symmetrical design",
+      "landscaped garden"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (18).png": {
+    "style": "Mediterranean",
+    "materials": [
+      "stucco",
+      "clay tiles",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "terracotta",
+      "black",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arcade",
+      "clay tile roof",
+      "arched windows and doors",
+      "vines and greenery"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (19).png": {
+    "style": "Contemporary",
+    "materials": [
+      "glass",
+      "steel",
+      "wood",
+      "stone"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "grey",
+      "light brown"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "flat roof",
+      "balcony",
+      "fire pit",
+      "patio"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (2).png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "gray"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched windows",
+      "symmetrical design",
+      "steep gabled roof",
+      "black window frames"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (20).png": {
+    "style": "Contemporary",
+    "materials": [
+      "steel",
+      "glass",
+      "wood",
+      "concrete"
+    ],
+    "colors": [
+      "#ffffff",
+      "#000000",
+      "#cccccc",
+      "wood tones"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "upper balcony",
+      "fire pit",
+      "outdoor dining area",
+      "geometric structure"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (21).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "concrete"
+    ],
+    "colors": [
+      "black",
+      "natural wood",
+      "green",
+      "gray"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "flat roof",
+      "large glass doors",
+      "wooden accents",
+      "minimalist landscaping"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (22).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "concrete",
+      "steel"
+    ],
+    "colors": [
+      "black",
+      "white",
+      "natural wood tone",
+      "#e0e0e0"
+    ],
+    "lighting": "warm",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "large glass doors",
+      "clean lines",
+      "flat roof",
+      "horizontal siding",
+      "outdoor patio"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (23).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "metal",
+      "glass",
+      "wood",
+      "stone"
+    ],
+    "colors": [
+      "blue",
+      "black",
+      "beige",
+      "grey"
+    ],
+    "lighting": "soft and warm",
+    "mood": "peaceful and cozy",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "rectangular layout",
+      "large windows",
+      "courtyard",
+      "container-like structure"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (24).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "glass",
+      "wood",
+      "metal",
+      "concrete"
+    ],
+    "colors": [
+      "#3B4A59",
+      "white",
+      "#D6BD91"
+    ],
+    "lighting": "warm",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "modular design",
+      "outdoor deck",
+      "large windows",
+      "symmetrical layout"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (25).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "steel",
+      "glass",
+      "wood",
+      "stone"
+    ],
+    "colors": [
+      "blue",
+      "white",
+      "black",
+      "natural wood tones"
+    ],
+    "lighting": "soft natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "container structure",
+      "large glass windows",
+      "outdoor seating area",
+      "desert landscaping"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (3).png": {
+    "style": "Neoclassical",
+    "materials": [
+      "brick",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "gray"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched windows",
+      "symmetrical facade",
+      "dark framed windows",
+      "central entrance",
+      "landscaped front"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (3)66.png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "glass",
+      "steel",
+      "wood"
+    ],
+    "colors": [
+      "#ffffff",
+      "#1c1c1c",
+      "#e1e1e1",
+      "#f5f5f5"
+    ],
+    "lighting": "warm",
+    "mood": "cozy",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "elevated structure",
+      "large glass windows",
+      "minimalist railing",
+      "external staircase",
+      "outdoor fire pit"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (33).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "natural wood",
+      "black",
+      "white",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "large sliding glass doors",
+      "flat roof",
+      "wood facade",
+      "minimalist landscaping",
+      "outdoor seating area"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (4).png": {
+    "style": "Neoclassical",
+    "materials": [
+      "brick",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched windows",
+      "symmetrical facade",
+      "gabled roof",
+      "large entryway"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (5).png": {
+    "style": "Neoclassical",
+    "materials": [
+      "brick",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "neutral gray"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched doorway",
+      "symmetrical windows",
+      "gabled roof",
+      "decorative topiary"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (6).png": {
+    "style": "Neoclassical",
+    "materials": [
+      "stone",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "white",
+      "gray",
+      "black",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched entryway",
+      "symmetrical facade",
+      "dormer windows",
+      "landscaped hedges",
+      "large windows"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (7).png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass",
+      "stone"
+    ],
+    "colors": [
+      "blue",
+      "white",
+      "natural wood tone"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "gabled roof",
+      "arched wooden door",
+      "open porch",
+      "large windows",
+      "wooden beams"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (8).png": {
+    "style": "Modern Farmhouse",
+    "materials": [
+      "wood",
+      "glass",
+      "concrete"
+    ],
+    "colors": [
+      "white",
+      "blue-gray",
+      "natural wood tones",
+      "black"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "gable roof",
+      "board and batten siding",
+      "covered porch",
+      "large windows",
+      "timber framing"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống (9).png": {
+    "style": "Mediterranean",
+    "materials": [
+      "stucco",
+      "clay tiles",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "white",
+      "terracotta",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched doorways",
+      "clay tile roof",
+      "symmetrical design",
+      "landscaped garden with shrubs",
+      "decorative clay pots"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống 6.png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "steel"
+    ],
+    "colors": [
+      "natural wood",
+      "black",
+      "clear glass"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large glass windows",
+      "sloped roof",
+      "exposed wood interior",
+      "integrated deck",
+      "geometric design"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống 98989.png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "glass",
+      "steel",
+      "wood",
+      "concrete"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "#242424",
+      "#E0E0E0"
+    ],
+    "lighting": "warm",
+    "mood": "cozy",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "elevated structure",
+      "floor-to-ceiling windows",
+      "outdoor seating area",
+      "fire pit",
+      "lighted staircase"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống.png": {
+    "style": "Neoclassical",
+    "materials": [
+      "stone",
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "beige",
+      "brown",
+      "black"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "symmetrical facade",
+      "arched entrance",
+      "balustrades",
+      "columns",
+      "tiled roof"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống44.png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass",
+      "stone",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "gray"
+    ],
+    "lighting": "warm",
+    "mood": "cozy",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "outdoor seating area",
+      "balcony with plants",
+      "stone chimney"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1\\tải xuống565.png": {
+    "style": "Contemporary",
+    "materials": [
+      "steel",
+      "glass",
+      "wood",
+      "stone"
+    ],
+    "colors": [
+      "#0000FF",
+      "white",
+      "natural wood tones",
+      "greenery"
+    ],
+    "lighting": "warm",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "container architecture",
+      "open courtyard",
+      "large windows",
+      "minimalist landscaping"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\1.png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "gray",
+      "black",
+      "white"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "pitched roof",
+      "large windows",
+      "symmetrical design",
+      "landscaped garden",
+      "attached garage"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\2.png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "#333333",
+      "#FFFFFF",
+      "#222222"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "symmetrical design",
+      "pitched roof",
+      "large windows",
+      "landscaped front yard"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\22.png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "glass",
+      "concrete"
+    ],
+    "colors": [
+      "#c0c0c0",
+      "#ffffff",
+      "#000000",
+      "#8b8970"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "large windows",
+      "stone facade",
+      "vine-covered walls",
+      "chimney",
+      "landscape garden"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\234.png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "glass",
+      "wood",
+      "plaster"
+    ],
+    "colors": [
+      "#D9D9D9 (light gray)",
+      "#3B3B3B (dark gray)",
+      "#CFA761 (light brown)"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "large windows",
+      "stone pillars",
+      "symmetrical design",
+      "vine-covered trellis",
+      "landscaped garden"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\3.png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "charcoal",
+      "white",
+      "light grey",
+      "black"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "tall chimney",
+      "garage with arch",
+      "symmetrical design",
+      "dark window frames",
+      "landscaped garden with hedges and flowers"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\33.png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "black",
+      "white",
+      "gray"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "large windows",
+      "chimney",
+      "gabled roof",
+      "symmetrical design",
+      "landscaped garden"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\333.png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "gray",
+      "white",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "large windows",
+      "stone facade",
+      "vine-covered facade",
+      "spacious porch",
+      "symmetrical design"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\344.png": {
+    "style": "Mediterranean",
+    "materials": [
+      "clay tiles",
+      "stucco",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "#8C4A29",
+      "black",
+      "#A89F8D"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "red clay tile roof",
+      "arched windows",
+      "stucco walls",
+      "vines and potted plants",
+      "outdoor lighting"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\444.png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "grey"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "tall chimney",
+      "black framed windows",
+      "arched garage door",
+      "gabled roof"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\555.png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "gray",
+      "beige",
+      "brown",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "large windows",
+      "stone facade",
+      "plant-covered entryway",
+      "symmetrical design"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\66.png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "gray",
+      "white",
+      "black",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "vines on facade",
+      "large windows",
+      "stone chimney",
+      "flat roofs",
+      "balcony"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\7677.png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "gray",
+      "beige",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "symmetrical facade",
+      "large windows",
+      "stone facade",
+      "greenery and vines"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\77.png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "gray",
+      "white",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "stone façade",
+      "vine-covered pergola",
+      "landscaped garden"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\BeautyPlus-Image-Enhancer-1764842516219-Picsart-AiImageEnhancer.jpg": {
+    "style": "Neoclassical",
+    "materials": [
+      "stone",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "gray",
+      "black"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched entryway",
+      "symmetrical windows",
+      "decorative molding",
+      "dormer windows",
+      "manicured landscaping"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\BeautyPlus-Image-Enhancer-1764842516219.jpg": {
+    "style": "Neoclassical",
+    "materials": [
+      "stone",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "gray",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "arched doorway",
+      "symmetrical design",
+      "dormer windows",
+      "landscaped garden"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\gretet34.png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "dark gray"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "gabled roof",
+      "arched windows",
+      "symmetrical design",
+      "landscaped hedges",
+      "large front entrance"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải 55.png": {
+    "style": "Neoclassical",
+    "materials": [
+      "stone",
+      "glass",
+      "shingles"
+    ],
+    "colors": [
+      "#ffffff",
+      "#8b4513",
+      "#000000"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "symmetrical design",
+      "dormer windows",
+      "grand entrance",
+      "landscaped garden"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (1).png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "white",
+      "black"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "simple geometric shapes",
+      "large windows",
+      "flat roof",
+      "balcony",
+      "wooden deck"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (10).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "light brown",
+      "black",
+      "green"
+    ],
+    "lighting": "warm",
+    "mood": "cozy",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "flat roof",
+      "large glass doors",
+      "wooden exterior",
+      "accent lighting"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (11).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "light brown",
+      "black",
+      "white"
+    ],
+    "lighting": "warm",
+    "mood": "cozy",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "flat roof",
+      "full-length glass doors",
+      "wooden siding",
+      "compact size"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (12).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "natural wood",
+      "#FFFFFF (white)",
+      "#000000 (black)"
+    ],
+    "lighting": "warm",
+    "mood": "cozy",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "large glass doors",
+      "horizontal wood paneling",
+      "minimalist design",
+      "simple cube shape"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (13).png": {
+    "style": "Contemporary",
+    "materials": [
+      "glass",
+      "wood",
+      "steel"
+    ],
+    "colors": [
+      "#B17D4F",
+      "#333333",
+      "#FFFFFF"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "A-frame design",
+      "large glass façade",
+      "triangular roof structure",
+      "symmetrical layout"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (14).png": {
+    "style": "Contemporary",
+    "materials": [
+      "glass",
+      "wood",
+      "steel"
+    ],
+    "colors": [
+      "black",
+      "natural wood",
+      "gold"
+    ],
+    "lighting": "natural",
+    "mood": "cozy",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "A-frame structure",
+      "large glass facade",
+      "wooden deck",
+      "sloped roof"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (15).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "steel"
+    ],
+    "colors": [
+      "#000000",
+      "#8B4513",
+      "#FFFFFF"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large glass windows",
+      "wooden deck",
+      "sharp roof lines",
+      "minimalist design"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (16).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "black",
+      "natural wood",
+      "transparent"
+    ],
+    "lighting": "warm",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large glass windows",
+      "angled roof",
+      "wooden exterior",
+      "elevated wooden deck"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (17).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "metal",
+      "stone"
+    ],
+    "colors": [
+      "black",
+      "natural wood",
+      "beige"
+    ],
+    "lighting": "warm",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "geometric roof",
+      "floor-to-ceiling windows",
+      "large deck",
+      "contrasting materials"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (18).png": {
+    "style": "Contemporary",
+    "materials": [
+      "glass",
+      "steel",
+      "wood",
+      "concrete"
+    ],
+    "colors": [
+      "white",
+      "#f2f2f2",
+      "#b3b3b3",
+      "#525252"
+    ],
+    "lighting": "soft",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "container-like structure",
+      "balcony",
+      "fire pit",
+      "outdoor seating area"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (19).png": {
+    "style": "Contemporary",
+    "materials": [
+      "steel",
+      "glass",
+      "wood",
+      "stone"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "gray",
+      "brown"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "container structure",
+      "large windows",
+      "balcony",
+      "outdoor seating area",
+      "fire pit"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (2).png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass",
+      "steel"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "natural wood"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "flat roof",
+      "large windows",
+      "balcony with railing",
+      "covered patio",
+      "vertical siding"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (20).png": {
+    "style": "Contemporary",
+    "materials": [
+      "metal",
+      "glass",
+      "wood",
+      "stone"
+    ],
+    "colors": [
+      "white",
+      "gray",
+      "beige",
+      "light wood tones"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "container structure",
+      "large windows",
+      "balcony",
+      "fire pit",
+      "outdoor dining area"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (21).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "metal"
+    ],
+    "colors": [
+      "black",
+      "natural wood",
+      "soft white"
+    ],
+    "lighting": "soft",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "flat roof",
+      "large windows",
+      "clean lines",
+      "outdoor seating area"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (22).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "concrete",
+      "metal"
+    ],
+    "colors": [
+      "black",
+      "white",
+      "natural wood tone"
+    ],
+    "lighting": "warm",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "flat roof",
+      "large windows",
+      "minimalist landscaping",
+      "dark vertical siding"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (23).png": {
+    "style": "Contemporary",
+    "materials": [
+      "steel",
+      "glass",
+      "wood",
+      "stone"
+    ],
+    "colors": [
+      "blue",
+      "black",
+      "beige",
+      "brown",
+      "green"
+    ],
+    "lighting": "soft",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "shipping container structure",
+      "large glass windows",
+      "central courtyard",
+      "minimalist landscaping",
+      "outdoor seating area"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (24).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "steel",
+      "glass",
+      "wood",
+      "concrete"
+    ],
+    "colors": [
+      "#F5F5F5",
+      "white",
+      "#A9A9A9",
+      "gray",
+      "#000000",
+      "black",
+      "#3B5998",
+      "blue"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "shipping container structure",
+      "large glass windows",
+      "open courtyard",
+      "minimalist landscaping"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (25).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "glass",
+      "wood",
+      "steel",
+      "concrete"
+    ],
+    "colors": [
+      "blue",
+      "beige",
+      "black",
+      "white"
+    ],
+    "lighting": "soft, natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "shipping container structure",
+      "large glass windows",
+      "outdoor deck",
+      "minimalist landscaping"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (3).png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass",
+      "steel"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "brown"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "balcony",
+      "wooden deck",
+      "vertical siding",
+      "modern lighting"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (3)66.png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "glass",
+      "steel",
+      "wood"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "gray"
+    ],
+    "lighting": "warm",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "elevated structure",
+      "large glass windows",
+      "external staircase",
+      "outdoor fire pit",
+      "open layout"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (33).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "glass",
+      "wood",
+      "concrete",
+      "metal"
+    ],
+    "colors": [
+      "#FFFFFF",
+      "#000000",
+      "#8B4513",
+      "#90EE90"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "flat roof",
+      "sleek lines",
+      "wooden deck",
+      "landscaped garden"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (4).png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass",
+      "stone"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "gray"
+    ],
+    "lighting": "soft",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "second-floor balcony",
+      "stone chimney",
+      "porch with steps"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (5).png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass",
+      "stone"
+    ],
+    "colors": [
+      "white",
+      "gray",
+      "black"
+    ],
+    "lighting": "natural",
+    "mood": "cozy",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "stone chimney",
+      "large windows",
+      "asymmetrical roof",
+      "small porch"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (6).png": {
+    "style": "Contemporary",
+    "materials": [
+      "stone",
+      "wood",
+      "glass"
+    ],
+    "colors": [
+      "white",
+      "gray",
+      "black"
+    ],
+    "lighting": "warm",
+    "mood": "cozy",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "stone chimney",
+      "sloped roof",
+      "simple porch",
+      "landscaped garden"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (7).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "glass",
+      "wood",
+      "metal"
+    ],
+    "colors": [
+      "light wood",
+      "black",
+      "neutral tones"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "large glass windows",
+      "flat roof",
+      "wooden deck",
+      "minimalist landscaping"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (7)22-Picsart-AiImageEnhancer.png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "wood",
+      "glass",
+      "shingles"
+    ],
+    "colors": [
+      "#FFFFFF",
+      "#2A2A2A",
+      "#E9E9E9",
+      "#34554F"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "gable roof",
+      "large windows",
+      "brick chimney",
+      "landscaped garden",
+      "arched garage door"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (7)22.png": {
+    "style": "Contemporary",
+    "materials": [
+      "brick",
+      "glass",
+      "wood"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "gray"
+    ],
+    "lighting": "natural",
+    "mood": "luxurious",
+    "architecture_type": "house",
+    "environment": "suburban",
+    "key_features": [
+      "gabled roof",
+      "large windows",
+      "chimney",
+      "landscaped garden",
+      "arched garage doors"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (8).png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass",
+      "steel"
+    ],
+    "colors": [
+      "light wood",
+      "black",
+      "white"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "flat roof",
+      "large windows",
+      "wooden cladding",
+      "open living space",
+      "patio area"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống (9).png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "glass",
+      "wood",
+      "steel"
+    ],
+    "colors": [
+      "black",
+      "natural wood",
+      "soft beige",
+      "green"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large glass windows",
+      "flat roof",
+      "wooden deck",
+      "minimalist landscaping"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống 6.png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "wood",
+      "glass",
+      "steel"
+    ],
+    "colors": [
+      "black",
+      "natural wood",
+      "white"
+    ],
+    "lighting": "natural",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large glass windows",
+      "A-frame roof",
+      "wooden deck",
+      "integrated into natural landscape"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống 98989.png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "glass",
+      "steel",
+      "wood",
+      "concrete"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "warm yellow"
+    ],
+    "lighting": "warm",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "elevated structure",
+      "floor-to-ceiling windows",
+      "illuminated staircase",
+      "outdoor fire pit",
+      "simple geometric form"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống.png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass",
+      "steel"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "gray"
+    ],
+    "lighting": "soft",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "flat roof",
+      "large windows",
+      "balcony",
+      "exterior lighting",
+      "deck area"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống44.png": {
+    "style": "Contemporary",
+    "materials": [
+      "wood",
+      "glass",
+      "stone",
+      "metal"
+    ],
+    "colors": [
+      "white",
+      "black",
+      "light grey"
+    ],
+    "lighting": "soft",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "large windows",
+      "balcony",
+      "stone chimney",
+      "wooden siding",
+      "outdoor lighting"
+    ]
+  },
+  "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2\\tải xuống565.png": {
+    "style": "Modern Minimalist",
+    "materials": [
+      "metal",
+      "glass",
+      "wood",
+      "concrete",
+      "stone"
+    ],
+    "colors": [
+      "#1E427E",
+      "white",
+      "natural wood",
+      "grey"
+    ],
+    "lighting": "warm",
+    "mood": "peaceful",
+    "architecture_type": "house",
+    "environment": "natural",
+    "key_features": [
+      "shipping container structure",
+      "large glass windows",
+      "wooden deck patio",
+      "landscaped garden"
+    ]
+  }
+}
