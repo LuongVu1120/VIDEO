@@ -67,13 +67,51 @@ class ApiClient {
     return this.request<{
       job_id: string;
       style_analysis: Record<string, unknown>;
-      prompts: Record<string, string>;
+      prompts: Record<string, unknown>[];
       images: string[];
       video_url: string | null;
-      captions: Record<string, unknown>;
+      captions: Record<string, {
+        en: { title: string; caption: string; hashtags: string[]; call_to_action: string };
+        vi: { title: string; caption: string; hashtags: string[]; call_to_action: string };
+      }>;
       cost_usd: number;
       created_at: string;
     }>(`/outputs/${jobId}`);
+  }
+
+  async updateCaption(
+    jobId: string,
+    platform: string,
+    fields: { title?: string; caption?: string; hashtags?: string[]; call_to_action?: string }
+  ) {
+    return this.request<{ success: boolean; platform: string; en: unknown }>(
+      `/outputs/${jobId}/captions`,
+      { method: "PATCH", body: JSON.stringify({ platform, ...fields }) }
+    );
+  }
+
+  async regenerateImage(jobId: string, imagePrompt: string, imageIndex: number, negativePrompt = "") {
+    return this.request<{ success: boolean; image_url: string; image_index: number }>(
+      `/outputs/${jobId}/regenerate-image`,
+      {
+        method: "POST",
+        body: JSON.stringify({ image_prompt: imagePrompt, negative_prompt: negativePrompt, image_index: imageIndex }),
+      }
+    );
+  }
+
+  async trimVideo(jobId: string, startSec: number, endSec: number) {
+    return this.request<{ success: boolean; video_url: string; duration_sec: number }>(
+      `/outputs/${jobId}/trim-video`,
+      { method: "POST", body: JSON.stringify({ start_sec: startSec, end_sec: endSec }) }
+    );
+  }
+
+  async regenerateCaption(jobId: string, platform: string, extraInstruction = "") {
+    return this.request<{ success: boolean; platform: string; caption: unknown }>(
+      `/outputs/${jobId}/regenerate-caption`,
+      { method: "POST", body: JSON.stringify({ platform, extra_instruction: extraInstruction }) }
+    );
   }
 }
 

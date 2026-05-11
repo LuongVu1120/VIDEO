@@ -62,7 +62,15 @@ class Settings(BaseSettings):
     # Social Media
     BUFFER_ACCESS_TOKEN: Optional[str] = None
     INSTAGRAM_ACCESS_TOKEN: Optional[str] = None
+    INSTAGRAM_USER_ID: Optional[str] = None
     TIKTOK_ACCESS_TOKEN: Optional[str] = None
+    FACEBOOK_PAGE_ID: Optional[str] = None
+    FACEBOOK_PAGE_ACCESS_TOKEN: Optional[str] = None
+
+    # Branding / Watermark
+    BRAND_NAME: str = ""            # Tên công ty / tên cá nhân
+    BRAND_PHONE: str = ""           # Số điện thoại
+    BRAND_WATERMARK_POSITION: str = "bottom-right"  # bottom-right | bottom-left | top-right | top-left
 
     # CORS
     CORS_ORIGINS: str = "http://localhost:3000"

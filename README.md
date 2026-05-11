@@ -29,13 +29,17 @@
 
 Hệ thống tự động hoá toàn bộ quy trình tạo nội dung kiến trúc:
 
-1. Người dùng upload **1 ảnh kiến trúc** làm tham chiếu
-2. AI phân tích phong cách, vật liệu, ánh sáng, tâm trạng
-3. AI tự động viết prompt tối ưu cho image gen và video gen
-4. Hệ thống tạo **4–6 ảnh** chất lượng cao cùng phong cách
-5. Hệ thống render **video cinematic** 15–30 giây
-6. AI viết caption, tiêu đề, hashtag
-7. (Tuỳ chọn) Tự động lên lịch và đăng lên Instagram, TikTok, YouTube Shorts
+1. Người dùng upload **1 ảnh kiến trúc** + mô tả yêu cầu sáng tạo (tuỳ chọn)
+2. AI phân tích phong cách, vật liệu, ánh sáng, tâm trạng — enrich bằng CLIP embeddings
+3. AI tự động viết prompt tối ưu cho image gen và video gen (DeepSeek V4, streaming)
+4. Hệ thống tạo **4–6 ảnh** chất lượng cao cùng phong cách (DALL-E 3 HD 9:16)
+5. Hệ thống render **video cinematic** 10–30 giây (Google Veo 3.1 / Runway Gen-3)
+6. AI viết caption song ngữ EN/VI theo từng platform — EN đăng thật, VI tham khảo
+7. Tự động đóng **watermark thương hiệu** lên tất cả ảnh và video
+8. **Export đa định dạng** 9:16 / 1:1 / 16:9 cho từng platform (FFmpeg, blur background)
+9. **Before/After video** so sánh hiện trạng và render (split / reveal / slideshow)
+10. Tự động lên lịch và đăng lên **Instagram · Facebook · TikTok · YouTube**
+11. **Analytics** — kéo metrics từ Graph API, gợi ý giờ đăng tốt nhất theo múi giờ VN
 
 ### Tại sao DeepSeek V4 thay thế được?
 
@@ -734,60 +738,75 @@ Import file `n8n-workflows/main-pipeline.json` vào n8n dashboard.
 
 ### Mỗi lần xử lý (1 ảnh đầu vào → 4 ảnh + 1 video)
 
-| Bước | Provider | Chi phí | Với DeepSeek |
-|------|----------|---------|--------------|
-| Vision Analysis | Claude 3.5 Sonnet | $0.012 | $0.012 (giữ nguyên) |
+| Bước | Provider | Chi phí gốc | Tối ưu hoá |
+|------|----------|-------------|-----------|
+| Vision Analysis | GPT-4o Vision | ~$0.012 | ~$0.005 (Claude Haiku) |
 | Prompt Writing | GPT-4o → **DeepSeek V4** | $0.030 → **$0.002** | **$0.002** |
-| Image Generation (4x) | DALL-E 3 HD | $0.160 | $0.160 (không đổi) |
-| Video Generation (10s) | Runway Gen-3 Turbo | $0.500 | $0.500 (không đổi) |
-| Caption Writing | GPT-4o-mini → **DeepSeek V4** | $0.004 → **$0.001** | **$0.001** |
-| **Tổng** | | **~$0.706** | **~$0.675** |
+| Image Generation (4 ảnh HD) | DALL-E 3 HD 1024×1792 | **$0.480** | $0.040 (SDXL via Replicate) |
+| Video Generation (10s) | Google Veo 3.1 (primary) | ~$0.50–1.00 | $0.50 (Runway fallback) |
+| Caption Writing ×4 platform | GPT-4o-mini → **DeepSeek V4** | $0.016 → **$0.004** | **$0.004** |
+| Watermark / Export / Before-After | FFmpeg + Pillow (local) | **$0.000** | $0 |
+| **Tổng (DALL-E + Veo)** | | **~$1.01–1.51** | Cấu hình mặc định |
+| **Tổng tiết kiệm (SDXL + Runway)** | | **~$0.56** | Chi phí thấp nhất |
+
+> **Thay đổi so với v1:** DALL-E 3 HD 1024×1792 là $0.12/ảnh (không phải $0.04) → 4 ảnh = $0.48. Google Veo 3.1 thay thế Runway làm primary. Watermark / Export / Before-After chạy local, $0.
 
 ### Chi phí hạ tầng hàng tháng
 
 | Service | Chi phí |
 |---------|---------|
 | VPS (4 CPU, 8GB RAM) | $40–60/tháng |
-| PostgreSQL (managed) | $15–25/tháng |
-| Redis (managed) | $10–15/tháng |
-| CDN + S3 Storage | $5–20/tháng |
-| **Tổng infrastructure** | **~$70–120/tháng** |
+| PostgreSQL managed (tuỳ chọn) | $15–25/tháng |
+| Redis managed (tuỳ chọn) | $10–15/tháng |
+| Storage (output static files) | $5–15/tháng |
+| **Tổng infrastructure** | **~$70–115/tháng** |
 
-> **Gợi ý pricing cho SaaS:** Gói Basic $29/tháng (30 lần tạo), Gói Pro $79/tháng (150 lần), Gói Agency $199/tháng (500 lần + multi-user).
+> **Gợi ý pricing cho SaaS:** Gói Basic $39/tháng (30 lần), Gói Pro $99/tháng (150 lần), Gói Agency $249/tháng (500 lần + multi-user + priority API).
+
+### Tính năng không tốn API cost (chạy local)
+
+Watermark thương hiệu · Export đa định dạng (9:16 / 1:1 / 16:9) · Before/After video · Lên lịch đăng bài · CLIP style matching · Analytics từ Graph API (miễn phí)
 
 ---
 
 ## 🗓️ Lộ trình phát triển
 
-### Phase 1 — MVP (Tuần 1–6)
-- [ ] Setup Next.js frontend + upload UI
-- [ ] Setup FastAPI backend + PostgreSQL
-- [ ] Tích hợp Claude Vision (Bước 1)
-- [ ] Tích hợp DeepSeek V4 cho prompt writing (Bước 2)
-- [ ] Tích hợp DALL-E 3 image generation (Bước 3)
-- [ ] Job status tracking + WebSocket notifications
-- [ ] Deploy lên VPS với Docker
+### Phase 1 — MVP ✅
+- [x] Setup Next.js 16 frontend + upload UI
+- [x] Setup FastAPI backend + PostgreSQL / SQLite fallback
+- [x] Tích hợp GPT-4o Vision (Bước 1)
+- [x] Tích hợp DeepSeek V4 cho prompt writing (Bước 2) — streaming
+- [x] Tích hợp DALL-E 3 HD image generation (Bước 3)
+- [x] Job status tracking + WebSocket notifications + streaming token
 
-### Phase 2 — Video Generation (Tuần 7–10)
-- [ ] Tích hợp Runway Gen-3 (Bước 4)
-- [ ] Tích hợp DeepSeek V4 cho caption writing (Bước 5)
-- [ ] Thêm Pika Labs làm backup video provider
-- [ ] Output gallery với download
+### Phase 2 — Video & AI ✅
+- [x] Tích hợp Google Veo 3.1 qua Gemini API (Bước 4, primary)
+- [x] Tích hợp Runway Gen-3 (fallback)
+- [x] Tích hợp DeepSeek V4 cho caption song ngữ EN/VI (Bước 5) — streaming
+- [x] CLIP embeddings + ChromaDB — semantic style matching
+- [x] Caption song ngữ: EN đăng thật, VI dịch tham khảo
 
-### Phase 3 — Auto Posting (Tuần 11–13)
-- [ ] Tích hợp Buffer API
-- [ ] Instagram Graph API
-- [ ] TikTok Content Posting API
-- [ ] YouTube Data API (Shorts)
-- [ ] Scheduling UI
+### Phase 3 — Auto Posting & Content Tools ✅
+- [x] Instagram Graph API v21 (Reels + Feed)
+- [x] Facebook Page API v21 (ảnh + video)
+- [x] TikTok Content Posting API
+- [x] YouTube Data API
+- [x] Content Calendar — lên lịch đăng, APScheduler kiểm tra mỗi 60s
+- [x] Watermark thương hiệu (Pillow + FFmpeg overlay)
+- [x] Before/After comparison video (split / reveal / slideshow)
+- [x] Multi-format export 9:16 / 1:1 / 16:9 (FFmpeg)
+- [x] Analytics dashboard — kéo metrics từ Instagram/Facebook Graph API
+- [x] Best Posting Time Advisor (múi giờ VN, engagement research)
+- [x] Mô tả yêu cầu sáng tạo — `user_description` inject vào pipeline
 
-### Phase 4 — Scale & SaaS (Tuần 14+)
+### Phase 4 — Scale & SaaS (Tiếp theo)
 - [ ] Multi-user với billing (Stripe)
-- [ ] Usage dashboard & analytics
 - [ ] Team/Agency workspace
 - [ ] Bulk processing (nhiều ảnh cùng lúc)
 - [ ] Custom brand voice cho caption
 - [ ] A/B test prompts
+- [ ] Virtual Staging (Stable Diffusion inpainting — đặt nội thất vào phòng trống)
+- [ ] Chatbot tư vấn phong cách kiến trúc
 
 ---
 

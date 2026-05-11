@@ -9,6 +9,7 @@ import re
 from openai import OpenAI
 from ..core.config import settings
 from ..core.trained_style import get_trained_style_summary
+from .clip_style_matcher import enrich_style_analysis, is_clip_ready
 
 
 class StyleAnalyzer:
@@ -22,7 +23,7 @@ class StyleAnalyzer:
             except Exception:
                 self.trained_style_summary = ""
 
-    def analyze(self, image_base64: str) -> str:
+    def analyze(self, image_base64: str, user_description: str = "") -> str:
         """
         Phân tích ảnh tham khảo, trích xuất style chi tiết.
         Tra ve JSON string.
@@ -42,10 +43,26 @@ When extracting fields, also add a "similarity_to_trained" field:
 - "low": different from user's usual style
 """
 
+        user_direction_context = ""
+        if user_description:
+            user_direction_context = f"""
+## USER DIRECTION
+The user has provided a specific creative direction for this project:
+"{user_description}"
+
+When extracting style fields, adjust your analysis to honor this direction.
+For example, if the user mentions a specific style or material emphasis, give it more weight
+in your output even if the image leans differently. Add a "user_direction_applied" field
+to the JSON set to true, and a "direction_notes" field briefly explaining how the analysis
+was adjusted.
+"""
+
         prompt = f"""
         Analyze this architecture image and extract detailed information.
         This image is a REFERENCE for generating NEW architectural designs.
         The goal is to understand the style deeply so we can create VARIATIONS.
+
+        {user_direction_context}
 
         {trained_context}
 
@@ -82,7 +99,20 @@ When extracting fields, also add a "similarity_to_trained" field:
             response_format={"type": "json_object"},
         )
         content = response.choices[0].message.content
-        return self._ensure_json(content)
+        result_str = self._ensure_json(content)
+
+        # Enrich with CLIP semantic similarity if training has been done
+        if is_clip_ready():
+            try:
+                result_dict = json.loads(result_str)
+                enriched = enrich_style_analysis(result_dict, image_base64)
+                result_str = json.dumps(enriched, ensure_ascii=False)
+                if enriched.get("style_source") == "clip_embedding":
+                    print(f"[Vision] CLIP enrichment applied (confidence={enriched.get('clip_analysis', {}).get('clip_confidence', 0):.0%})")
+            except Exception as e:
+                print(f"[Vision] CLIP enrichment skipped: {e}")
+
+        return result_str
 
     def generate_variation_directions(self, style_analysis: dict) -> str:
         """

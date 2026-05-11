@@ -19,3 +19,11 @@ from .ws_video import router as ws_video_router
 router.include_router(ws_video_router, tags=["WebSocket Video"])
 from ..pipeline_routes import router as pipeline_router
 router.include_router(pipeline_router, tags=["Pipeline"])
+from .schedule import router as schedule_router
+router.include_router(schedule_router, prefix="", tags=["Schedule"])
+from .before_after import router as before_after_router
+router.include_router(before_after_router, tags=["Before/After"])
+from .analytics import router as analytics_router
+router.include_router(analytics_router, tags=["Analytics"])
+from .export import router as export_router
+router.include_router(export_router, tags=["Export"])

@@ -8,6 +8,7 @@ import asyncio
 import os
 
 from ..services.video_pipeline import VideoPipeline
+from ..services.tts_service import TTSService
 from ..core.websocket import manager
 
 router = APIRouter(prefix="/api/v1/pipeline", tags=["Pipeline"])

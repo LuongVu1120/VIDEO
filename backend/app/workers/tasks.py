@@ -24,6 +24,7 @@ from ..services.video_generator import VideoGenerator
 from ..services.caption_writer import CaptionWriter
 from ..services.music_suggester import MusicSuggester
 from ..services.social_poster import SocialPoster
+from ..services.watermark_service import apply_branding_to_job
 
 
 def _get_sync_db_url() -> str:
@@ -61,6 +62,38 @@ def _send_ws_update(job_id: str, data: dict):
         loop.close()
     except Exception:
         pass
+
+
+def _make_stream_callback(job_id: str, step: str, batch_size: int = 80):
+    """
+    Returns an on_chunk callback that batches streaming tokens and sends them
+    via WebSocket. Batching (every batch_size chars) avoids the overhead of
+    creating a new event loop for every single token.
+    """
+    buffer: list[str] = []
+    total: list[int] = [0]
+
+    def flush():
+        if not buffer:
+            return
+        text = "".join(buffer)
+        buffer.clear()
+        _send_ws_update(job_id, {
+            "type": "stream_chunk",
+            "step": step,
+            "chunk": text,
+        })
+
+    def on_chunk(text: str):
+        buffer.append(text)
+        total[0] += len(text)
+        if total[0] >= batch_size:
+            flush()
+            total[0] = 0
+
+    # Expose flush so the caller can drain the buffer after streaming ends
+    on_chunk.flush = flush
+    return on_chunk
 
 
 def update_job_status(job_id: str, status: str, progress: int = None,
@@ -126,7 +159,8 @@ def process_job_sync(job_id: str, image_path: str, options: dict):
 
 def _run_pipeline(job_id: str, image_path: str, options: dict):
     """Core pipeline: 7 buoc chinh."""
-    platforms = options.get("platforms", ["instagram"])
+    platforms = options.get("platforms", ["instagram", "facebook", "tiktok", "youtube"])
+    user_description = options.get("user_description", "")
 
     # ==================== STEP 1: VISION ANALYSIS ====================
     update_job_status(
@@ -139,7 +173,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
     with open(image_path, "rb") as f:
         image_base64 = base64.b64encode(f.read()).decode("utf-8")
 
-    style_analysis = analyzer.analyze(image_base64)
+    style_analysis = analyzer.analyze(image_base64, user_description=user_description)
     style_data = json.loads(style_analysis) if isinstance(style_analysis, str) else style_analysis
     if not isinstance(style_data, dict):
         style_data = {"style": str(style_data)}
@@ -168,15 +202,20 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
             "environment": variation_style.get("environment", style_data.get("environment", "natural")),
         }
 
-        # ==================== STEP 2: PROMPT WRITING ====================
+        # ==================== STEP 2: PROMPT WRITING (streaming) ====================
+        variation_label = blended_analysis.get("variation_name", f"Variation {idx+1}")
         update_job_status(
             job_id, "processing", progress=15 + (idx * 15),
-            current_step=f"Writing prompts for {blended_analysis.get('variation_name', f'Variation {idx+1}')}...",
+            current_step=f"Writing prompts for {variation_label}...",
             step_name=f"prompt_writing_v{idx+1}"
         )
 
         prompt_writer = PromptWriter(use_deepseek=settings.USE_DEEPSEEK_FOR_PROMPTS)
-        prompts_data = prompt_writer.generate_prompts(blended_analysis)
+        prompt_cb = _make_stream_callback(job_id, f"prompt_v{idx+1}")
+        prompts_data = prompt_writer.generate_prompts_streaming(
+            blended_analysis, on_chunk=prompt_cb, user_description=user_description
+        )
+        prompt_cb.flush()
         prompts = json.loads(prompts_data) if isinstance(prompts_data, str) else prompts_data
         if not isinstance(prompts, dict):
             prompts = {"image_prompt": str(prompts_data), "video_prompt": "",
@@ -207,6 +246,25 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
             video_gen = VideoGenerator()
             video_url = video_gen.generate(images[0], prompts.get("video_prompt", ""))
 
+        # ==================== BRANDING / WATERMARK ====================
+        if settings.BRAND_NAME:
+            update_job_status(
+                job_id, "processing", progress=25 + (idx * 15),
+                current_step=f"Applying brand watermark for variation {idx+1}...",
+                step_name=f"watermark_v{idx+1}"
+            )
+            try:
+                images, video_url = apply_branding_to_job(
+                    job_id=f"{job_id}_v{idx+1}",
+                    images=images,
+                    video_url=video_url,
+                    brand_name=settings.BRAND_NAME,
+                    brand_phone=settings.BRAND_PHONE,
+                    position=settings.BRAND_WATERMARK_POSITION,
+                )
+            except Exception as e:
+                print(f"[Watermark] Skipped: {e}")
+
         all_results.append({
             "variation": blended_analysis,
             "prompts": prompts,
@@ -224,12 +282,12 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
     caption_writer = CaptionWriter(use_deepseek=settings.USE_DEEPSEEK_FOR_CAPTIONS)
     captions = {}
     for platform in platforms:
-        caption_data = caption_writer.write_caption(style_data, platform)
-        try:
-            captions[platform] = json.loads(caption_data) if isinstance(caption_data, str) else caption_data
-        except (json.JSONDecodeError, TypeError):
-            captions[platform] = {"title": "", "caption": str(caption_data),
-                                 "hashtags": [], "call_to_action": ""}
+        caption_cb = _make_stream_callback(job_id, f"caption_{platform}")
+        # Returns {"vi": {...}, "en": {...}} in one API call
+        captions[platform] = caption_writer.write_bilingual_caption_streaming(
+            style_data, platform, on_chunk=caption_cb
+        )
+        caption_cb.flush()
 
     # ==================== STEP 6: MUSIC SUGGESTION ====================
     update_job_status(

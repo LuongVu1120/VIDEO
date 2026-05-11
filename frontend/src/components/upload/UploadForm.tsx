@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Upload, ImageIcon, Video, Hash, Send } from "lucide-react";
+import { Upload, ImageIcon, Video, Hash, Send, Lightbulb, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -11,6 +11,29 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { useJobStore } from "@/store/job-store";
 import { cn } from "@/lib/utils";
+
+const MAX_DESC = 300;
+
+const ARCH_KEYWORDS = [
+  "phong cách", "style", "vật liệu", "ánh sáng", "nội thất", "ngoại thất",
+  "minimalist", "hiện đại", "modern", "tropical", "japandi", "industrial",
+  "luxury", "sang trọng", "màu", "color", "không gian", "công trình",
+  "villa", "căn hộ", "văn phòng", "khách hàng", "target", "tiktok",
+  "instagram", "video", "render", "thiết kế", "design", "architecture",
+];
+
+function isOffTopic(text: string): boolean {
+  if (text.length < 20) return false;
+  const lower = text.toLowerCase();
+  return !ARCH_KEYWORDS.some((kw) => lower.includes(kw));
+}
+
+const EXAMPLE_HINTS = [
+  "Phong cách Japandi tối giản, vật liệu gỗ tự nhiên và bê tông, ánh sáng trắng ban ngày",
+  "Biệt thự nhiệt đới hiện đại, nhấn mạnh cây xanh và hồ bơi, tone màu xanh lá",
+  "Nội thất luxury màu trung tính, đèn vàng ấm, hướng đến khách hàng cao cấp",
+  "Mặt tiền công trình thương mại, phong cách industrial, ánh nắng vàng chiều",
+];
 
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null);
@@ -20,6 +43,7 @@ export function UploadForm() {
   const [platforms, setPlatforms] = useState<string[]>(["instagram"]);
   const [autoPost, setAutoPost] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [userDescription, setUserDescription] = useState("");
   const router = useRouter();
   const { toast } = useToast();
   const { uploadImage, isUploading } = useJobStore();
@@ -69,6 +93,7 @@ export function UploadForm() {
     formData.append("generate_video", generateVideo.toString());
     formData.append("platforms", platforms.join(","));
     formData.append("auto_post", autoPost.toString());
+    formData.append("user_description", userDescription.trim());
 
     try {
       const jobId = await uploadImage(formData);
@@ -154,6 +179,81 @@ export function UploadForm() {
                 <p className="text-xs text-neutral-400">JPEG, PNG, or WebP up to 10MB</p>
               </>
             )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Creative Direction */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lightbulb className="h-5 w-5 text-amber-500" />
+            Mô tả yêu cầu sáng tạo
+            <span className="text-sm font-normal text-neutral-400">(tuỳ chọn)</span>
+          </CardTitle>
+          <CardDescription>
+            Cho AI biết bạn muốn nhấn mạnh điều gì — phong cách, vật liệu, ánh sáng, đối tượng khách hàng.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="relative">
+            <textarea
+              value={userDescription}
+              onChange={(e) => setUserDescription(e.target.value.slice(0, MAX_DESC))}
+              placeholder="Ví dụ: Tôi muốn phong cách Japandi hiện đại, vật liệu gỗ tự nhiên và bê tông thô, ánh sáng ban ngày mềm mại. Video hướng đến khách hàng trung-cao cấp quan tâm đến thiết kế tối giản."
+              rows={3}
+              className={cn(
+                "w-full resize-none rounded-md border px-3 py-2 text-sm outline-none transition-colors",
+                "bg-white dark:bg-neutral-900",
+                "border-neutral-200 dark:border-neutral-700",
+                "focus:border-neutral-500 dark:focus:border-neutral-400",
+                "placeholder:text-neutral-400"
+              )}
+            />
+            <span
+              className={cn(
+                "absolute bottom-2 right-3 text-xs",
+                userDescription.length >= MAX_DESC
+                  ? "text-red-400"
+                  : "text-neutral-400"
+              )}
+            >
+              {userDescription.length}/{MAX_DESC}
+            </span>
+          </div>
+
+          {/* Off-topic warning */}
+          {isOffTopic(userDescription) && (
+            <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>
+                Mô tả nên liên quan đến kiến trúc và nội dung bạn muốn tạo — ví dụ: phong cách thiết kế, vật liệu, ánh sáng, đối tượng khách hàng, hoặc mục tiêu đăng bài.
+              </span>
+            </div>
+          )}
+
+          {/* Example chips */}
+          <div className="space-y-1.5">
+            <p className="text-xs text-neutral-400">Ví dụ gợi ý — nhấn để dùng:</p>
+            <div className="flex flex-wrap gap-2">
+              {EXAMPLE_HINTS.map((hint) => (
+                <button
+                  key={hint}
+                  type="button"
+                  onClick={() => setUserDescription(hint)}
+                  className={cn(
+                    "rounded-full border px-3 py-1 text-xs transition-colors text-left",
+                    "border-neutral-200 bg-neutral-50 text-neutral-600",
+                    "hover:border-neutral-400 hover:bg-neutral-100",
+                    "dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300",
+                    "dark:hover:border-neutral-500 dark:hover:bg-neutral-700",
+                    userDescription === hint && "border-neutral-800 bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
+                  )}
+                >
+                  {hint.length > 55 ? hint.slice(0, 55) + "…" : hint}
+                </button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>

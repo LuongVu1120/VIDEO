@@ -1,5 +1,6 @@
 """Video Enhancement API Routes - Extend the main pipeline with TTS + Video Composition."""
 
+import os
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional

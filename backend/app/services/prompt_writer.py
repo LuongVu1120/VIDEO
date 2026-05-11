@@ -2,6 +2,7 @@
 
 import json
 import re
+from typing import Callable, Optional
 from openai import OpenAI
 from ..core.config import settings
 from ..core.trained_style import load_system_prompt
@@ -187,14 +188,112 @@ CRITICAL: Generate 6-10 relevant style_tags based on the style analysis."""
             kwargs["response_format"] = {"type": "json_object"}
 
         response = self.client.chat.completions.create(**kwargs)
-
         content = response.choices[0].message.content
 
-        # Ensure valid JSON (DeepSeek may return markdown-wrapped JSON)
+        return self._postprocess(content, style, materials_str, lighting, camera_type, features_str)
+
+    def generate_prompts_streaming(
+        self,
+        style_analysis: dict,
+        on_chunk: Optional[Callable[[str], None]] = None,
+        user_description: str = "",
+    ) -> str:
+        """
+        Streaming version of generate_prompts.
+        Calls on_chunk(text) for each token received.
+        Returns the full processed JSON string when complete.
+        """
+        # Build all the same locals as generate_prompts
+        style = style_analysis.get("style", "Contemporary")
+        materials_list = style_analysis.get("materials", ["glass", "wood", "stone"])
+        materials_str = ", ".join(materials_list[:4])
+        lighting = style_analysis.get("lighting", "natural golden hour")
+        features_list = style_analysis.get("key_features", ["large windows", "clean lines"])
+        features_str = ", ".join(features_list[:4])
+
+        if "golden" in lighting.lower() or "sunset" in lighting.lower():
+            camera_type = "Canon EOS R5 with 24mm f/1.4L II USM lens"
+        elif "blue" in lighting.lower() or "night" in lighting.lower():
+            camera_type = "Sony A7R IV with 16-35mm f/2.8 GM lens, long exposure"
+        else:
+            camera_type = "Nikon Z8 with 24mm f/1.8 S lens"
+
+        system_prompt = self.trained_system_prompt or (
+            "You are an expert architectural photographer and AI art director. "
+            "Generate precise, detailed prompts for AI image and video generation. "
+            "Always output valid JSON."
+        )
+        if self.trained_video_system_prompt:
+            system_prompt += f"\n\n### VIDEO STYLE PROFILE\n{self.trained_video_system_prompt}"
+
+        video_context = (
+            f"\n## TRAINED VIDEO STYLE\n{self.trained_video_summary}"
+            if self.trained_video_summary else ""
+        )
+
+        camera_perspective = style_analysis.get("camera_perspective", "eye-level")
+        if camera_perspective == "low angle":
+            camera_desc = "low angle view emphasizing the structure's grandeur, 16mm ultra wide-angle"
+        elif camera_perspective == "aerial":
+            camera_desc = "aerial perspective, 50mm tilt-shift lens"
+        else:
+            camera_desc = "eye-level view, 24mm wide-angle lens, natural perspective"
+
+        environment = style_analysis.get("environment", "natural landscape")
+        time_of_day = style_analysis.get("time_of_day", "golden hour")
+        mood = style_analysis.get("mood", "peaceful")
+
+        direction_block = (
+            f"\n## USER CREATIVE DIRECTION\n"
+            f'The client specifically requested: "{user_description}"\n'
+            f"Ensure the image_prompt and video_prompt reflect this direction. "
+            f"This takes priority over default style assumptions.\n"
+        ) if user_description else ""
+
+        user_prompt = (
+            f"You are generating prompts for a {style} house in a {environment} setting.\n\n"
+            f"Style: {style} | Materials: {materials_str} | Lighting: {lighting} ({time_of_day}) | "
+            f"Mood: {mood} | Features: {features_str} | Camera: {camera_desc}\n"
+            f"{video_context}"
+            f"{direction_block}\n"
+            f"Generate image_prompt, video_prompt, negative_prompt, style_tags as JSON."
+        )
+
+        stream = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.7,
+            stream=True,
+        )
+
+        full_text = ""
+        for chunk in stream:
+            delta = (chunk.choices[0].delta.content or "") if chunk.choices else ""
+            if delta:
+                full_text += delta
+                if on_chunk:
+                    on_chunk(delta)
+
+        if self.use_deepseek:
+            full_text = self._extract_json(full_text)
+
+        return self._postprocess(full_text, style, materials_str, lighting, camera_type, features_str)
+
+    def _postprocess(
+        self,
+        content: str,
+        style: str,
+        materials_str: str,
+        lighting: str,
+        camera_type: str,
+        features_str: str,
+    ) -> str:
+        """Validate JSON and fill template fallbacks."""
         if self.use_deepseek:
             content = self._extract_json(content)
-
-        # Validate and fill template as fallback
         try:
             result = json.loads(content)
             if not result.get("image_prompt") or len(result["image_prompt"]) < 50:
@@ -205,18 +304,22 @@ CRITICAL: Generate 6-10 relevant style_tags based on the style analysis."""
                 result["video_prompt"] = self._fill_video_template(
                     style, features_str, lighting
                 )
-            content = json.dumps(result, ensure_ascii=False)
+            return json.dumps(result, ensure_ascii=False)
         except (json.JSONDecodeError, TypeError):
-            # Fallback: build from templates directly
             fallback = {
                 "image_prompt": self._fill_image_template(style, materials_str, lighting, camera_type),
                 "video_prompt": self._fill_video_template(style, features_str, lighting),
-                "negative_prompt": "distorted, low quality, blurry, unnatural colors, oversaturated, warped perspective, cartoonish, 3d render look, CGI, bad proportions, unrealistic materials, artificial lighting",
-                "style_tags": [f"#{style.replace(' ', '')}", "#ModernHouse", "#Architecture", "#ArchitecturalDesign", "#LuxuryHome"],
+                "negative_prompt": (
+                    "distorted, low quality, blurry, unnatural colors, oversaturated, "
+                    "warped perspective, cartoonish, 3d render look, CGI, bad proportions, "
+                    "unrealistic materials, artificial lighting"
+                ),
+                "style_tags": [
+                    f"#{style.replace(' ', '')}", "#ModernHouse", "#Architecture",
+                    "#ArchitecturalDesign", "#LuxuryHome",
+                ],
             }
-            content = json.dumps(fallback, ensure_ascii=False)
-
-        return content
+            return json.dumps(fallback, ensure_ascii=False)
 
     def _fill_image_template(self, style: str, materials: str, lighting: str, camera: str) -> str:
         """Fill the standard image prompt template."""

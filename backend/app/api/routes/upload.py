@@ -29,6 +29,7 @@ async def upload_image(
     platforms: str = Form("instagram"),
     auto_post: bool = Form(False),
     ai_provider: str = Form("openai"),
+    user_description: str = Form("", description="Mô tả yêu cầu / hướng sáng tạo từ người dùng"),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -73,6 +74,7 @@ async def upload_image(
         "platforms": platforms_list,
         "auto_post": auto_post,
         "ai_provider": ai_provider,
+        "user_description": user_description.strip()[:300],
     }
 
     # Chay pipeline trong background thread (khong can Redis/Celery)
