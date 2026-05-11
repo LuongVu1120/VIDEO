@@ -1,110 +1,127 @@
-version: "3.8"
+version: '3.8'
+
+# Build Arguments Configuration
+# You can override these by setting environment variables before running docker-compose
+#
+# Example for China environment (auto uses Tsinghua mirror):
+#   USE_CN_MIRROR=true docker-compose up -d
+#
+# Example for international environment (default):
+#   docker-compose up -d
 
 services:
-  # === PostgreSQL ===
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: archvideo
-    ports:
-      - "5433:5432"
+  # Init Service - Ensures config.yaml exists before other services start
+  # This fixes the Docker issue where mounting a non-existent file creates a directory
+  init:
+    image: alpine:latest
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d archvideo"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      - ./:/workspace
+    command: >
+      sh -c '
+        if [ -d /workspace/config.yaml ]; then
+          echo "⚠️  config.yaml is a directory, removing it...";
+          rm -rf /workspace/config.yaml;
+        fi;
+        if [ ! -f /workspace/config.yaml ] && [ -f /workspace/config.example.yaml ]; then
+          echo "📋 Creating config.yaml from config.example.yaml...";
+          cp /workspace/config.example.yaml /workspace/config.yaml;
+          echo "✅ config.yaml created successfully!";
+        else
+          echo "✅ config.yaml already exists.";
+        fi
+      '
+    restart: "no"
 
-  # === Redis ===
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  # === Backend API ===
-  backend:
+  # API Service - FastAPI backend
+  api:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
+      args:
+        USE_CN_MIRROR: ${USE_CN_MIRROR:-false}
+    container_name: pixelle-video-api
+    command: .venv/bin/python api/app.py --host 0.0.0.0 --port 8000
+    depends_on:
+      init:
+        condition: service_completed_successfully
     ports:
       - "8000:8000"
-    env_file:
-      - .env
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://user:password@postgres:5432/archvideo
-      - DATABASE_URL_SYNC=postgresql+psycopg2://user:password@postgres:5432/archvideo
-      - REDIS_URL=redis://redis:6379/0
-      - CORS_ORIGINS=http://localhost:3000
-      - DEBUG=true
     volumes:
-      - ./backend/uploads:/app/uploads
-      - ./backend:/app
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      # Mount config file (read-write to allow saving from Web UI)
+      # Note: init service auto-creates config.yaml from config.example.yaml if not exists
+      - ./config.yaml:/app/config.yaml
+      # Mount data directories for persistence
+      # data/ contains: users/, bgm/, templates/, workflows/ (custom resources)
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./templates:/app/templates
+      - ./bgm:/app/bgm
+      # Note: Default resources (bgm/, templates/, workflows/) are baked into the image
+      # Custom resources in data/* will override defaults
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - pixelle-network
 
-  # === Celery Worker ===
-  celery_worker:
+  # Web UI Service - Streamlit frontend
+  web:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    env_file:
-      - .env
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://user:password@postgres:5432/archvideo
-      - DATABASE_URL_SYNC=postgresql+psycopg2://user:password@postgres:5432/archvideo
-      - REDIS_URL=redis://redis:6379/0
-    volumes:
-      - ./backend/uploads:/app/uploads
-      - ./backend:/app
+      args:
+        USE_CN_MIRROR: ${USE_CN_MIRROR:-false}
+    container_name: pixelle-video-web
+    command: .venv/bin/streamlit run web/app.py --server.port 8501 --server.address 0.0.0.0
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=2
-
-  # === Frontend ===
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      init:
+        condition: service_completed_successfully
     ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-      - NEXT_PUBLIC_WS_URL=ws://localhost:8000/api/v1/ws
-    depends_on:
-      - backend
-
-  # === n8n ===
-  n8n:
-    image: n8nio/n8n:latest
-    ports:
-      - "5678:5678"
-    environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=admin
-      - N8N_HOST=localhost
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5678/
+      - "8501:8501"
     volumes:
-      - n8n_data:/home/node/.n8n
-      - ./n8n-workflows:/home/node/.n8n/workflows
+      # Mount config file (read-write to allow saving from Web UI)
+      # Note: init service auto-creates config.yaml from config.example.yaml if not exists
+      - ./config.yaml:/app/config.yaml
+      # Mount data directories for persistence
+      # data/ contains: users/, bgm/, templates/, workflows/ (custom resources)
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./templates:/app/templates
+      - ./bgm:/app/bgm
+      # Note: Default resources (bgm/, templates/, workflows/) are baked into the image
+      # Custom resources in data/* will override defaults
+    environment:
+      - TZ=Asia/Shanghai
+      - STREAMLIT_SERVER_PORT=8501
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - pixelle-network
 
-volumes:
-  postgres_data:
-  n8n_data:
+networks:
+  pixelle-network:
+    driver: bridge
+

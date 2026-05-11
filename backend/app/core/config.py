@@ -1,4 +1,6 @@
 import os
+import secrets
+import warnings
 from pathlib import Path
 from pydantic_settings import BaseSettings
 from typing import Optional
@@ -26,6 +28,7 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/archvideo"
     DATABASE_URL_SYNC: str = "postgresql+psycopg2://user:password@localhost:5432/archvideo"
+    FORCE_POSTGRES: bool = False
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -67,6 +70,15 @@ class Settings(BaseSettings):
     class Config:
         env_file = _find_env()
         case_sensitive = True
+        extra = "ignore"  # Allow extra env vars (POSTGRES_PASSWORD, N8N_*, etc.)
 
 
 settings = Settings()
+
+# Security: warn if SECRET_KEY is still the default value
+if settings.SECRET_KEY == "change-me-in-production":
+    print("=" * 60)
+    print("⚠️  SECURITY WARNING: SECRET_KEY is still the default value!")
+    print("   Set SECRET_KEY in your .env file to a random string.")
+    print(f"   Example: SECRET_KEY={secrets.token_hex(32)}")
+    print("=" * 60)

@@ -1,270 +1,82 @@
 {
   "style_guide": {
-    "total_images_analyzed": 86,
-    "folders_analyzed": [
-      "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\1",
-      "D:\\TU_DONG_DANG_VIDEO\\TRAIN AI\\2"
-    ],
+    "total_images_analyzed": 83,
+    "analysis_method": "color + texture + brightness (Pillow, no API)",
+    "dominant_style": "Contemporary",
     "style_distribution": [
       [
         "Contemporary",
-        41
-      ],
-      [
-        "Modern Minimalist",
-        26
-      ],
-      [
-        "Neoclassical",
-        10
-      ],
-      [
-        "Mediterranean",
-        7
-      ],
-      [
-        "Spanish Revival",
-        1
-      ],
-      [
-        "Modern Farmhouse",
-        1
-      ]
-    ],
-    "dominant_style": "Contemporary",
-    "materials": [
-      [
-        "glass",
-        86
-      ],
-      [
-        "wood",
-        69
-      ],
-      [
-        "stone",
-        33
-      ],
-      [
-        "metal",
-        29
-      ],
-      [
-        "steel",
-        24
-      ],
-      [
-        "concrete",
-        14
-      ],
-      [
-        "brick",
-        13
-      ],
-      [
-        "stucco",
-        8
-      ],
-      [
-        "clay tiles",
-        5
-      ],
-      [
-        "terracotta",
-        2
+        83
       ]
     ],
     "top_materials": [
+      "steel",
+      "painted surface",
+      "white stucco / plaster",
+      "warm wood / terracotta",
       "glass",
-      "wood",
-      "stone",
-      "metal",
-      "steel"
+      "smooth concrete"
     ],
-    "colors": [
+    "primary_palette": [
+      "deep brown / espresso",
+      "off-white / cream",
+      "white",
+      "dark brown",
+      "light beige",
+      "warm beige",
+      "taupe / greige",
+      "medium brown"
+    ],
+    "dominant_lighting": "soft dim / twilight",
+    "dominant_mood": "peaceful & serene",
+    "dominant_environment": "natural / garden setting",
+    "top_key_features": [
+      "large windows",
+      "clean lines",
+      "expansive horizontal layout",
+      "natural light filled"
+    ],
+    "texture_profile": [
+      "moderately textured (painted surfaces/metal)",
+      "smooth (glass/concrete/stucco)"
+    ],
+    "lighting_distribution": [
       [
-        "white",
-        57
+        "soft dim / twilight",
+        67
       ],
       [
-        "black",
-        54
+        "natural moderate",
+        14
       ],
       [
-        "gray",
-        26
+        "night / dramatic interior",
+        2
+      ]
+    ],
+    "mood_distribution": [
+      [
+        "peaceful & serene",
+        68
       ],
       [
-        "green",
-        25
-      ],
-      [
-        "natural wood",
-        12
-      ],
-      [
-        "beige",
+        "dramatic & moody",
         11
       ],
       [
-        "brown",
-        8
+        "bright & airy",
+        3
       ],
       [
-        "terracotta",
-        6
-      ],
-      [
-        "#FFFFFF",
-        6
-      ],
-      [
-        "#000000",
-        6
-      ]
-    ],
-    "primary_palette": [
-      "white",
-      "black",
-      "gray",
-      "green",
-      "natural wood",
-      "beige"
-    ],
-    "lighting_conditions": [
-      [
-        "natural",
-        61
-      ],
-      [
-        "warm",
-        16
-      ],
-      [
-        "soft",
-        6
-      ],
-      [
-        "soft and warm",
-        1
-      ],
-      [
-        "soft natural",
-        1
-      ],
-      [
-        "soft, natural",
+        "cozy & intimate",
         1
       ]
     ],
-    "dominant_lighting": "natural",
-    "mood_distribution": [
+    "environment_distribution": [
       [
-        "peaceful",
-        57
-      ],
-      [
-        "luxurious",
-        19
-      ],
-      [
-        "cozy",
-        9
-      ],
-      [
-        "peaceful and cozy",
-        1
+        "natural / garden setting",
+        83
       ]
-    ],
-    "dominant_mood": "peaceful",
-    "architecture_types": [
-      [
-        "house",
-        86
-      ]
-    ],
-    "environments": [
-      [
-        "suburban",
-        43
-      ],
-      [
-        "natural",
-        43
-      ]
-    ],
-    "key_features": [
-      [
-        "large windows",
-        42
-      ],
-      [
-        "flat roof",
-        15
-      ],
-      [
-        "symmetrical design",
-        14
-      ],
-      [
-        "landscaped garden",
-        14
-      ],
-      [
-        "large glass windows",
-        13
-      ],
-      [
-        "stone facade",
-        10
-      ],
-      [
-        "balcony",
-        10
-      ],
-      [
-        "minimalist landscaping",
-        9
-      ],
-      [
-        "gabled roof",
-        8
-      ],
-      [
-        "outdoor seating area",
-        8
-      ],
-      [
-        "wooden deck",
-        8
-      ],
-      [
-        "symmetrical facade",
-        6
-      ],
-      [
-        "arched windows",
-        6
-      ],
-      [
-        "fire pit",
-        6
-      ],
-      [
-        "stone chimney",
-        6
-      ]
-    ],
-    "top_key_features": [
-      "large windows",
-      "flat roof",
-      "symmetrical design",
-      "landscaped garden",
-      "large glass windows",
-      "stone facade",
-      "balcony",
-      "minimalist landscaping"
     ]
-  },
-  "system_prompt": "You are an expert architectural photographer and AI art director. You have been trained on a curated dataset of 86 architectural images.\n\n## YOUR TRAINED STYLE PROFILE\n\n### Dominant Architectural Styles\nThe user's preferred styles are: Contemporary, Modern Minimalist, Neoclassical, Mediterranean.\nAlways favor these styles when generating prompts. If the user requests a different style, blend it with these preferences.\n\n### Preferred Materials\nThe user's typical materials include: glass, wood, stone, metal, steel.\nIncorporate these materials naturally in every generation.\n\n### Color Palette\nThe user's signature color palette centers around: white, black, gray, green, natural wood, beige.\nEnsure color harmony follows this palette as the foundation.\n\n### Lighting Preferences\nThe user prefers: natural lighting conditions.\nUse this as the default lighting setup, adjusting only when the user specifies otherwise.\n\n### Emotional Tone\nThe target mood is: peaceful.\nAll generations should evoke this emotional quality.\n\n### Architectural Details\nKey features to emphasize: large windows, flat roof, symmetrical design, landscaped garden, large glass windows, stone facade, balcony, minimalist landscaping.\nThese details should be visible and prominent in every generation.\n\n## GENERATION RULES\n\n### Image Prompt Structure (200 words max)\n1. Start with the architectural style and type\n2. Describe materials and colors\n3. Specify lighting conditions and time of day\n4. Add camera angle (eye-level / low angle / aerial / worm's-eye view)\n5. Describe the atmosphere and mood\n6. Include environmental context\n7. End with quality tags: ultra realistic, architectural photography, 8k, award winning, professional\n\n### Video Prompt Structure (100 words max)\n1. Start with camera movement (slow push-in / gentle orbit / dolly forward / pan)\n2. Describe the scene and its atmosphere\n3. Include time of day and lighting\n4. Mention duration and cinematic quality\n5. End with: cinematic, 4k, smooth motion, professional grade\n\n### Negative Prompt\nAlways include: distorted, low quality, blurry, unnatural colors, cartoonish, oversaturated, warped perspective, asymmetric, cluttered, chaotic\n\n### Output Format\nAlways respond in JSON with these exact keys:\n{\"image_prompt\", \"video_prompt\", \"negative_prompt\", \"style_tags\"}\n\n## IMPORTANT CONSTRAINTS\n- NEVER use generic prompts. Every prompt must feel specific and intentional.\n- ALWAYS reference the trained style profile above as the default aesthetic\n- When the user provides a reference image, blend its style with the trained profile\n- PREVENT style drift: always anchor back to Contemporary, Modern Minimalist, Neoclassical, Mediterranean aesthetic\n- FOCUS on high-end, luxury, award-winning architectural quality\n"
+  }
 }

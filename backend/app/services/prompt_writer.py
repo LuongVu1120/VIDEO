@@ -8,11 +8,11 @@ from ..core.trained_style import load_system_prompt
 from ..core.trained_video_style import load_video_system_prompt, get_trained_video_style_summary
 
 
-# === PROMPT TEMPLATE CHUAN ===
-# Template nay duoc thiet ke de tao anh kien truc chat luong cao,
-# dung cam bien thuc te, khong co CGI look.
+# === PROMPT TEMPLATE: 9:16 PORTRAIT cho dien thoai ===
+# DALL-E 3: 1024x1792, SDXL: 768x1344, Veo 3.1: 9:16
 IMAGE_PROMPT_TEMPLATE = """A high-end architectural exterior of a {style} house,
 featuring {materials}, clean composition, realistic proportions,
+9:16 vertical orientation for mobile display,
 shot in {lighting_condition}, using {camera_type}.
 
 Real-life architectural photography, captured with a full-frame DSLR camera,
@@ -20,7 +20,8 @@ natural lighting, realistic shadows, subtle reflections,
 true-to-life materials, accurate textures, slight imperfections,
 global illumination, soft ambient occlusion.
 
-Balanced composition, professional architectural photography,
+Portrait composition optimized for phone screen,
+professional architectural photography,
 shot with 24mm wide-angle lens, depth of field, natural perspective,
 realistic exposure, HDR photography, cinematic tone.
 
@@ -28,14 +29,16 @@ Ultra realistic, 8k, sharp focus, high dynamic range,
 real-world lighting behavior, no CGI look.
 
 --no distortion, bad proportions, unrealistic structure,
-overly perfect surfaces, 3d render look, cartoon, artificial lighting"""
+overly perfect surfaces, 3d render look, cartoon, artificial lighting,
+landscape orientation, horizontal composition"""
 
 VIDEO_PROMPT_TEMPLATE = """Cinematic architectural exterior of a {style} house,
-gentle slow orbit around the house showcasing {features},
+slow vertical pan up showcasing {features},
+9:16 portrait format for mobile (TikTok/Reels/Shorts),
 {lighting_condition} with warm sunlight casting natural shadows,
 full-frame DSLR quality, smooth 24fps motion,
 architectural documentary style, professional grade,
-4k ultra HD, no distortion, realistic materials."""
+4k ultra HD vertical, no distortion, realistic materials."""
 
 
 class PromptWriter:

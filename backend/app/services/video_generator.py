@@ -106,7 +106,7 @@ class VideoGenerator:
                 }
             ],
             "parameters": {
-                "aspectRatio": "16:9",
+                "aspectRatio": "9:16",
                 "personGeneration": "allow_adult",
                 "numberOfVideos": 1
             }
@@ -200,12 +200,12 @@ class VideoGenerator:
             "X-Runway-Version": "2024-11-06"
         }
 
-        # Valid ratios: "1280:720","720:1280","1104:832","960:960","832:1104","1584:672"
+        # 9:16 portrait for mobile phones (TikTok/Reels/Shorts)
         payload = {
             "model": "gen3a_turbo",
             "promptImage": image_url,
             "promptText": prompt,
-            "ratio": "1280:720",
+            "ratio": "720:1280",
             "duration": 10,
             "watermark": False
         }

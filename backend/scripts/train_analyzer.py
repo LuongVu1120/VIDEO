@@ -34,8 +34,8 @@ from openai import OpenAI
 
 
 TRAIN_DIRS = [
-    r"D:\TU_DONG_DANG_VIDEO\TRAIN AI\1",
-    r"D:\TU_DONG_DANG_VIDEO\TRAIN AI\2",
+    str(Path(__file__).parent.parent.parent / "TRAIN AI" / "1"),
+    str(Path(__file__).parent.parent.parent / "TRAIN AI" / "2"),
 ]
 
 OUTPUT_DIR = Path(__file__).parent / "training_output"
@@ -47,13 +47,23 @@ SUMMARY_FILE = OUTPUT_DIR / "style_summary.json"
 
 
 def get_image_files(directory: str) -> list[str]:
-    """Lay tat ca file anh trong thu muc."""
+    """Lay tat ca file anh trong thu muc, bo qua anh AI-enhanced."""
     valid_exts = {'.png', '.jpg', '.jpeg', '.webp'}
+    # Bo qua anh da qua AI enhancement (BeautyPlus, Picsart, AiImageEnhancer)
+    ai_enhanced_keywords = ['beautyplus', 'picsart', 'aiimageenhancer', 'enhancer']
     files = []
+    skipped = 0
     for f in os.listdir(directory):
         ext = os.path.splitext(f)[1].lower()
-        if ext in valid_exts:
-            files.append(os.path.join(directory, f))
+        if ext not in valid_exts:
+            continue
+        f_lower = f.lower()
+        if any(kw in f_lower for kw in ai_enhanced_keywords):
+            skipped += 1
+            continue
+        files.append(os.path.join(directory, f))
+    if skipped > 0:
+        print(f"  [FILTER] Bo qua {skipped} anh AI-enhanced trong {directory}")
     return sorted(files)
 
 

@@ -1,0 +1,3 @@
+file 'C:\VIDEO\VIDEO\test_demo\video\segment_1.mp4'
+file 'C:\VIDEO\VIDEO\test_demo\video\segment_2.mp4'
+file 'C:\VIDEO\VIDEO\test_demo\video\segment_3.mp4'

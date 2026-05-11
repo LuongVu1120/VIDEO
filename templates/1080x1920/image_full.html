@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1080, height=1920">
+    <title>Mobile Portrait - 1080x1920</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 1080px;
+            height: 1920px;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #fff;
+            position: relative;
+            background: transparent;
+        }
+
+        .bg {
+            position: absolute;
+            inset: 0;
+            background-image: url("{{image}}");
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg,
+                    rgba(0, 0, 0, 0.15) 0%,
+                    rgba(0, 0, 0, 0.02) 40%,
+                    rgba(0, 0, 0, 0.4) 75%,
+                    rgba(0, 0, 0, 0.75) 100%);
+            z-index: 1;
+        }
+
+        .content {
+            position: absolute;
+            bottom: 120px;
+            left: 60px;
+            right: 60px;
+            z-index: 2;
+        }
+
+        .title {
+            font-size: 72px;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            font-size: 36px;
+            font-weight: 300;
+            line-height: 1.3;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .tag {
+            padding: 14px 32px;
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-radius: 60px;
+            font-size: 28px;
+            font-weight: 400;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .brand {
+            position: absolute;
+            top: 80px;
+            left: 60px;
+            z-index: 2;
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            opacity: 0.6;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg"></div>
+    <div class="overlay"></div>
+    <div class="brand">{{brand}}</div>
+    <div class="content">
+        <div class="title">{{title}}</div>
+        <div class="subtitle">{{subtitle}}</div>
+        <div class="tags">
+            {{#tags}}
+            <div class="tag">{{.}}</div>
+            {{/tags}}
+        </div>
+    </div>
+</body>
+
+</html>

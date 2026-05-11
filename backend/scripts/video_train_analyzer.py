@@ -44,7 +44,7 @@ from openai import OpenAI
 
 # === CONFIGURATION ===
 
-VIDEO_DIR = r"D:\TU_DONG_DANG_VIDEO\VIDEO"
+VIDEO_DIR = str(Path(__file__).parent.parent.parent / "VIDEO")
 OUTPUT_DIR = Path(__file__).parent / "video_training_output"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 

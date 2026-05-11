@@ -1,259 +1,170 @@
 {
   "video_style_guide": {
     "total_videos_analyzed": 9,
-    "folder_analyzed": "D:\\TU_DONG_DANG_VIDEO\\VIDEO",
+    "analysis_method": "ffprobe metadata extraction (no API)",
+    "dominant_camera_movement": "gentle push-in",
     "camera_movement_distribution": [
       [
-        "slow push-in",
-        8
-      ],
-      [
-        "gentle pull-out",
-        1
+        "gentle push-in",
+        9
       ]
     ],
-    "dominant_camera_movement": "slow push-in",
+    "dominant_speed": "moderate",
     "movement_speed_distribution": [
       [
-        "slow",
+        "moderate",
         8
       ],
       [
-        "very slow",
+        "slow",
         1
       ]
     ],
-    "dominant_speed": "slow",
+    "dominant_pacing": "steady",
     "pacing_distribution": [
       [
+        "steady",
+        7
+      ],
+      [
         "relaxed",
-        9
-      ]
-    ],
-    "dominant_pacing": "relaxed",
-    "transition_distribution": [
-      [
-        "none - single shot",
-        5
-      ],
-      [
-        "cut",
-        4
-      ]
-    ],
-    "dominant_transition": "none - single shot",
-    "perspective_distribution": [
-      [
-        "eye-level",
-        9
-      ]
-    ],
-    "dominant_perspective": "eye-level",
-    "atmosphere_distribution": [
-      [
-        "cinematic",
-        5
-      ],
-      [
-        "real estate tour",
-        4
+        2
       ]
     ],
     "dominant_atmosphere": "cinematic",
+    "dominant_perspective": "eye-level",
     "video_quality_distribution": [
       [
-        "high",
-        6
+        "HD",
+        5
       ],
       [
-        "ultra high",
-        3
-      ]
-    ],
-    "depth_of_field_distribution": [
-      [
-        "medium",
-        9
-      ]
-    ],
-    "style_distribution": [
-      [
-        "Modern Minimalist",
-        6
-      ],
-      [
-        "Unknown",
-        2
-      ],
-      [
-        "Contemporary",
-        1
-      ]
-    ],
-    "dominant_style": "Modern Minimalist",
-    "materials": [
-      [
-        "e",
-        15
-      ],
-      [
-        "o",
-        14
-      ],
-      [
-        " ",
-        14
-      ],
-      [
-        "s",
-        14
-      ],
-      [
-        ",",
-        13
-      ],
-      [
-        "l",
-        12
-      ],
-      [
-        "t",
-        10
-      ],
-      [
-        "a",
-        9
-      ]
-    ],
-    "colors": [
-      [
-        " ",
-        27
-      ],
-      [
-        "t",
-        20
-      ],
-      [
-        "a",
-        19
-      ],
-      [
-        "e",
-        18
-      ],
-      [
-        "r",
-        13
-      ],
-      [
-        "l",
-        13
-      ],
-      [
-        "o",
-        13
-      ],
-      [
-        ",",
-        12
-      ]
-    ],
-    "lighting_conditions": [
-      [
-        "Unknown",
-        2
-      ],
-      [
-        "Soft ambient lighting with ceiling lights",
-        1
-      ],
-      [
-        "Evening/Night, Warm Interior Lighting",
-        1
-      ],
-      [
-        "Soft, Warm",
-        1
-      ],
-      [
-        "Warm interior lighting, evening ambient",
-        1
-      ],
-      [
-        "Soft, Even lighting, Evening",
-        1
-      ],
-      [
-        "Natural, Soft Warm Interiors",
-        1
-      ],
-      [
-        "Soft natural light",
-        1
-      ]
-    ],
-    "mood_distribution": [
-      [
-        "Cozy, Tranquil",
+        "Full HD",
         3
       ],
       [
-        "Unknown",
-        2
-      ],
-      [
-        "Calm and inviting",
-        1
-      ],
-      [
-        "Cozy and serene",
-        1
-      ],
-      [
-        "Calm, Inviting",
-        1
-      ],
-      [
-        "Calm and serene",
+        "1116x824",
         1
       ]
     ],
-    "environments": [
-      [
-        "Unknown",
-        2
-      ],
-      [
-        "Lush greenery, garden setting",
-        1
-      ],
-      [
-        "Forest, Mountainous",
-        1
-      ],
-      [
-        "Forest, Mountains",
-        1
-      ],
-      [
-        "Forest with mountain backdrop",
-        1
-      ],
-      [
-        "Suburban green space",
-        1
-      ],
-      [
-        "Garden Setting",
-        1
-      ],
-      [
-        "Lush greenery and trees",
-        1
-      ]
-    ],
-    "video_style_description": "The preferred video style uses slow push-in camera movement at a slow speed, creating a relaxed pacing throughout. Transitions are typically none - single shot, shot from eye-level perspective. The overall atmosphere is cinematic and professional."
-  },
-  "video_system_prompt": "You are an expert architectural cinematographer and AI video director. You have been trained on a curated dataset of 9 architectural videos.\n\n## YOUR TRAINED VIDEO STYLE PROFILE\n\n### Camera Movement\nYour signature camera movement is: slow push-in.\nAlways use this as the default camera movement style for video generation.\nIf the user requests a different movement, blend it with this signature style.\n\n### Movement Speed\nYour preferred speed is: slow.\nThe camera should move at this speed to maintain the signature pacing.\n\n### Pacing & Rhythm\nYour signature pacing is: relaxed.\nMaintain this rhythm throughout the video.\n\n### Transitions\nYour default transition is: none - single shot.\nKeep transitions clean and professional.\n\n### Camera Perspective\nYour default perspective is: eye-level.\nUse this as the primary camera angle.\n\n### Atmosphere\nYour signature atmosphere is: cinematic.\nAll videos should evoke this cinematic quality.\n\n### Depth of Field\nPrefer shallow depth of field for professional architectural cinematography.\n\n## ARCHITECTURAL STYLE PREFERENCES (from video frames)\nYour preferred architectural styles are: Modern Minimalist, Unknown, Contemporary.\nThe target mood is: Cozy, Tranquil.\n\n## VIDEO PROMPT GENERATION RULES\n\n### Video Prompt Structure (100-150 words)\nAlways structure your video prompts in this order:\n1. Camera movement (start with your signature style)\n2. Scene description (architecture, materials, lighting)\n3. Time of day and atmosphere\n4. Speed and pacing\n5. Duration reference (8-15 seconds)\n6. End with quality tags: cinematic, 4k, smooth motion, professional grade, architectural cinematography, gimbal stabilized\n\n### Negative Prompt for Video\nAlways include: distorted, low quality, blurry, unnatural motion, jittery, choppy, warped perspective, cartoonish, CGI looking, artificial lighting, unrealistic physics\n\n### Output Format\nAlways respond in JSON with these exact keys:\n{\"image_prompt\", \"video_prompt\", \"negative_prompt\", \"style_tags\"}\n\n## IMPORTANT CONSTRAINTS\n- NEVER use generic video prompts. Every prompt must reflect the signature videography style.\n- ALWAYS reference the trained video style profile above as the default.\n- PREVENT style drift: always anchor back to slow push-in + slow + relaxed aesthetic.\n- FOCUS on professional, cinematic, award-winning architectural videography quality.\n"
+    "detail": [
+      {
+        "file": "1127.mp4",
+        "duration": 8.0,
+        "resolution": "1920x1080",
+        "fps": 30.0,
+        "codec": "h264",
+        "quality": "Full HD",
+        "camera_movement": "gentle push-in",
+        "movement_speed": "moderate",
+        "pacing": "relaxed",
+        "atmosphere": "cinematic",
+        "perspective": "eye-level"
+      },
+      {
+        "file": "17da1fc3-ead3-489e-b80c-cf84ad7d5246.mp4",
+        "duration": 10.5,
+        "resolution": "1080x1920",
+        "fps": 30.0,
+        "codec": "h264",
+        "quality": "Full HD",
+        "camera_movement": "gentle push-in",
+        "movement_speed": "slow",
+        "pacing": "relaxed",
+        "atmosphere": "cinematic",
+        "perspective": "eye-level"
+      },
+      {
+        "file": "4ce96c13-52d0-4afc-aead-a5f759cc5c69.mp4",
+        "duration": 8.0,
+        "resolution": "1080x1920",
+        "fps": 30.0,
+        "codec": "h264",
+        "quality": "Full HD",
+        "camera_movement": "gentle push-in",
+        "movement_speed": "moderate",
+        "pacing": "steady",
+        "atmosphere": "cinematic",
+        "perspective": "eye-level"
+      },
+      {
+        "file": "645ea15c-9fc6-4208-8752-360bc5a46210.mp4",
+        "duration": 8.0,
+        "resolution": "720x1280",
+        "fps": 24.0,
+        "codec": "h264",
+        "quality": "HD",
+        "camera_movement": "gentle push-in",
+        "movement_speed": "moderate",
+        "pacing": "steady",
+        "atmosphere": "cinematic",
+        "perspective": "eye-level"
+      },
+      {
+        "file": "b94bbcfe-56a0-4064-b328-6a7afba37abd.mp4",
+        "duration": 8.0,
+        "resolution": "720x1280",
+        "fps": 24.0,
+        "codec": "h264",
+        "quality": "HD",
+        "camera_movement": "gentle push-in",
+        "movement_speed": "moderate",
+        "pacing": "steady",
+        "atmosphere": "cinematic",
+        "perspective": "eye-level"
+      },
+      {
+        "file": "c8a19de0-9384-4b97-b0d9-f102cf56ff38.mp4",
+        "duration": 8.0,
+        "resolution": "720x1280",
+        "fps": 24.0,
+        "codec": "h264",
+        "quality": "HD",
+        "camera_movement": "gentle push-in",
+        "movement_speed": "moderate",
+        "pacing": "steady",
+        "atmosphere": "cinematic",
+        "perspective": "eye-level"
+      },
+      {
+        "file": "d0d15294-d0bd-47c7-891c-b3f69b031205.mp4",
+        "duration": 8.0,
+        "resolution": "720x1280",
+        "fps": 24.0,
+        "codec": "h264",
+        "quality": "HD",
+        "camera_movement": "gentle push-in",
+        "movement_speed": "moderate",
+        "pacing": "steady",
+        "atmosphere": "cinematic",
+        "perspective": "eye-level"
+      },
+      {
+        "file": "e87dc637-ae34-4487-9bf4-80d58db1b745.mp4",
+        "duration": 8.0,
+        "resolution": "720x1280",
+        "fps": 24.0,
+        "codec": "h264",
+        "quality": "HD",
+        "camera_movement": "gentle push-in",
+        "movement_speed": "moderate",
+        "pacing": "steady",
+        "atmosphere": "cinematic",
+        "perspective": "eye-level"
+      },
+      {
+        "file": "kling_20250903_Image_to_Video_The_camera_6043_0.mp4",
+        "duration": 5.0,
+        "resolution": "1116x824",
+        "fps": 24.0,
+        "codec": "h264",
+        "quality": "1116x824",
+        "camera_movement": "gentle push-in",
+        "movement_speed": "moderate",
+        "pacing": "steady",
+        "atmosphere": "cinematic",
+        "perspective": "eye-level"
+      }
+    ]
+  }
 }
