@@ -22,7 +22,7 @@ if settings.FORCE_POSTGRES:
 elif _database_url.startswith("postgresql+asyncpg"):
     _database_url = _sqlite_url
     print(f"[DB] PostgreSQL configured but dev mode — using SQLite: {_sqlite_url}")
-    print(f"[DB] ℹ️  Set FORCE_POSTGRES=true in production to require PostgreSQL")
+    print(f"[DB] Set FORCE_POSTGRES=true in production to require PostgreSQL")
 else:
     print(f"[DB] Using: {_database_url}")
 
