@@ -7,10 +7,45 @@ import json
 import base64
 import asyncio
 import os
+import threading
 from pathlib import Path
 from datetime import datetime, timezone
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
+
+# ── Cancel flag registry ──────────────────────────────────────────────────────
+# Maps job_id → threading.Event. Set the event to request cancellation.
+_cancel_flags: dict[str, threading.Event] = {}
+_cancel_flags_lock = threading.Lock()
+
+
+def register_cancel_flag(job_id: str) -> threading.Event:
+    """Create and store a cancel event for this job. Called before starting the thread."""
+    event = threading.Event()
+    with _cancel_flags_lock:
+        _cancel_flags[job_id] = event
+    return event
+
+
+def request_cancel(job_id: str) -> bool:
+    """Signal the pipeline thread to stop. Returns True if flag was found."""
+    with _cancel_flags_lock:
+        event = _cancel_flags.get(job_id)
+    if event:
+        event.set()
+        return True
+    return False
+
+
+def _is_cancelled(job_id: str) -> bool:
+    with _cancel_flags_lock:
+        event = _cancel_flags.get(job_id)
+    return event is not None and event.is_set()
+
+
+def _cleanup_cancel_flag(job_id: str):
+    with _cancel_flags_lock:
+        _cancel_flags.pop(job_id, None)
 
 from .celery_app import celery_app
 from ..core.config import settings
@@ -28,25 +63,23 @@ from ..services.watermark_service import apply_branding_to_job
 
 
 def _get_sync_db_url() -> str:
-    """Get sync database URL with SQLite fallback."""
-    sync_url = settings.DATABASE_URL_SYNC
+    """Get sync database URL with SQLite fallback — mirrors database.py logic."""
     async_url = settings.DATABASE_URL
-
-    # If async already switched to SQLite (e.g., arch_video.db exists), use SQLite sync
     db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "arch_video.db")
-    if os.path.exists(db_path):
-        return f"sqlite:///{db_path}"
+    sqlite_url = f"sqlite:///{db_path}"
 
-    # If async URL is SQLite
+    if settings.FORCE_POSTGRES:
+        sync_url = settings.DATABASE_URL_SYNC
+        return sync_url if sync_url else async_url.replace("+asyncpg", "+psycopg2")
+
+    # Same rule as database.py: postgresql+asyncpg in dev → use SQLite
+    if async_url.startswith("postgresql+asyncpg"):
+        return sqlite_url
+
     if async_url.startswith("sqlite"):
-        return async_url.replace("+aiosqlite", "").replace("+asyncpg", "")
+        return async_url.replace("+aiosqlite", "")
 
-    # Try sync URL as-is
-    if sync_url:
-        return sync_url
-
-    # Fallback to SQLite
-    return f"sqlite:///{db_path}"
+    return sqlite_url
 
 
 sync_engine = create_engine(_get_sync_db_url(), echo=False)
@@ -149,8 +182,12 @@ def process_job_sync(job_id: str, image_path: str, options: dict):
     """Chay pipeline dong bo (goi truc tiep tu upload route)."""
     try:
         _run_pipeline(job_id, image_path, options)
+    except _CancelledError:
+        _handle_pipeline_cancelled(job_id)
     except Exception as exc:
         _handle_pipeline_error(job_id, exc)
+    finally:
+        _cleanup_cancel_flag(job_id)
 
 
 # ======================================================================
@@ -163,6 +200,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
     user_description = options.get("user_description", "")
 
     # ==================== STEP 1: VISION ANALYSIS ====================
+    _check_cancel(job_id)
     update_job_status(
         job_id, "processing", progress=5,
         current_step="Analyzing reference image style...",
@@ -179,6 +217,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
         style_data = {"style": str(style_data)}
 
     # Generate creative variations
+    _check_cancel(job_id)
     update_job_status(
         job_id, "processing", progress=10,
         current_step="Generating creative architectural variations...",
@@ -189,6 +228,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
     all_results = []
 
     for idx, variation in enumerate(variations.get("variations", [])):
+        _check_cancel(job_id)
         variation_style = variation if isinstance(variation, dict) else {}
         blended_analysis = {
             **style_data,
@@ -222,6 +262,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
                       "negative_prompt": "", "style_tags": []}
 
         # ==================== STEP 3: IMAGE GENERATION ====================
+        _check_cancel(job_id)
         update_job_status(
             job_id, "processing", progress=20 + (idx * 15),
             current_step=f"Generating images for variation {idx+1}...",
@@ -236,6 +277,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
         )
 
         # ==================== STEP 4: VIDEO GENERATION ====================
+        _check_cancel(job_id)
         video_url = None
         if options.get("generate_video", True) and images:
             update_job_status(
@@ -247,6 +289,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
             video_url = video_gen.generate(images[0], prompts.get("video_prompt", ""))
 
         # ==================== BRANDING / WATERMARK ====================
+        _check_cancel(job_id)
         if settings.BRAND_NAME:
             update_job_status(
                 job_id, "processing", progress=25 + (idx * 15),
@@ -273,6 +316,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
         })
 
     # ==================== STEP 5: CAPTION WRITING ====================
+    _check_cancel(job_id)
     update_job_status(
         job_id, "processing", progress=85,
         current_step="Writing captions and hashtags for all platforms...",
@@ -290,6 +334,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
         caption_cb.flush()
 
     # ==================== STEP 6: MUSIC SUGGESTION ====================
+    _check_cancel(job_id)
     update_job_status(
         job_id, "processing", progress=92,
         current_step="Selecting background music...",
@@ -365,6 +410,16 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
     })
 
 
+class _CancelledError(Exception):
+    pass
+
+
+def _check_cancel(job_id: str):
+    """Raise _CancelledError if the job has been cancelled."""
+    if _is_cancelled(job_id):
+        raise _CancelledError(f"Job {job_id} was cancelled by user")
+
+
 def _handle_pipeline_error(job_id: str, exc: Exception):
     """Mark job as failed."""
     db: Session = SyncSession()
@@ -381,4 +436,25 @@ def _handle_pipeline_error(job_id: str, exc: Exception):
         "job_id": job_id,
         "status": "failed",
         "error": str(exc),
+    })
+
+
+def _handle_pipeline_cancelled(job_id: str):
+    """Mark job as cancelled."""
+    db: Session = SyncSession()
+    try:
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if job:
+            job.status = "cancelled"
+            job.error_message = "Stopped by user"
+            job.updated_at = datetime.now(timezone.utc)
+            db.commit()
+    finally:
+        db.close()
+
+    _send_ws_update(job_id, {
+        "job_id": job_id,
+        "status": "cancelled",
+        "progress": job.progress if job else 0,
+        "current_step": "Stopped by user",
     })

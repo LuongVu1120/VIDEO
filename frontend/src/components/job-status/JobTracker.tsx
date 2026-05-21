@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle2, Loader2, XCircle, Clock } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle, Clock, StopCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
 import { api } from "@/lib/api";
 
 interface JobStatus {
@@ -35,6 +36,24 @@ interface JobTrackerProps {
 export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+  const { toast } = useToast();
+
+  const handleStop = async () => {
+    if (cancelling) return;
+    setCancelling(true);
+    try {
+      await api.cancelJob(jobId);
+      toast({ title: "Đang dừng...", description: "Job sẽ dừng sau bước hiện tại." });
+    } catch (e) {
+      toast({
+        title: "Không thể dừng",
+        description: e instanceof Error ? e.message : "Lỗi không xác định",
+        variant: "destructive",
+      });
+      setCancelling(false);
+    }
+  };
 
   useEffect(() => {
     // Connect to WebSocket
@@ -43,7 +62,14 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setJobStatus(data);
+      // WS sends partial updates — merge into existing state to avoid losing fields
+      setJobStatus((prev) => ({
+        ...(prev ?? {}),
+        ...data,
+        steps_completed: Array.isArray(data.steps_completed)
+          ? data.steps_completed
+          : prev?.steps_completed ?? [],
+      } as JobStatus));
       if (data.status === "completed" && onComplete) {
         onComplete();
       }
@@ -60,8 +86,9 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
         const status = await api.getJobStatus(jobId);
         setJobStatus(status);
         setError(null);
-        if (status.status === "completed" || status.status === "failed") {
+        if (status.status === "completed" || status.status === "failed" || status.status === "cancelled") {
           clearInterval(pollInterval);
+          setCancelling(false);
           if (status.status === "completed" && onComplete) {
             onComplete();
           }
@@ -91,6 +118,8 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
     ? jobStatus.steps_completed.length
     : 0;
 
+  const isActive = jobStatus.status === "queued" || jobStatus.status === "processing";
+
   return (
     <Card>
       <CardHeader>
@@ -101,13 +130,38 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
           {jobStatus.status === "failed" && (
             <XCircle className="h-5 w-5 text-red-500" />
           )}
-          {jobStatus.status === "processing" && (
+          {jobStatus.status === "cancelled" && (
+            <StopCircle className="h-5 w-5 text-orange-500" />
+          )}
+          {jobStatus.status === "processing" && !cancelling && (
             <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+          )}
+          {jobStatus.status === "processing" && cancelling && (
+            <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
           )}
           {jobStatus.status === "queued" && (
             <Clock className="h-5 w-5 text-yellow-500" />
           )}
-          <span className="capitalize">{jobStatus.status}</span>
+          <span className="capitalize">
+            {cancelling && isActive ? "Đang dừng..." : jobStatus.status}
+          </span>
+
+          {isActive && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto gap-1.5 border-red-200 text-red-600 hover:bg-red-50 hover:border-red-400 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/30"
+              onClick={handleStop}
+              disabled={cancelling}
+            >
+              {cancelling ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <StopCircle className="h-3.5 w-3.5" />
+              )}
+              {cancelling ? "Đang dừng..." : "Dừng job"}
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -131,7 +185,7 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
         {/* Steps */}
         <div className="space-y-3">
           {Object.entries(STEP_LABELS).map(([key, label]) => {
-            const completed = jobStatus.steps_completed.includes(key);
+            const completed = (jobStatus.steps_completed ?? []).includes(key);
             const isCurrent = jobStatus.current_step === label;
 
             return (
@@ -173,8 +227,18 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
           })}
         </div>
 
+        {/* Cancelled banner */}
+        {jobStatus.status === "cancelled" && (
+          <div className="p-3 rounded-lg bg-orange-50 border border-orange-200 dark:bg-orange-950/30 dark:border-orange-800 flex items-center gap-2">
+            <StopCircle className="h-4 w-4 text-orange-500 shrink-0" />
+            <p className="text-sm text-orange-700 dark:text-orange-400">
+              Job đã được dừng thủ công.
+            </p>
+          </div>
+        )}
+
         {/* Error */}
-        {jobStatus.error_message && (
+        {jobStatus.error_message && jobStatus.status !== "cancelled" && (
           <div className="p-3 rounded-lg bg-red-50 border border-red-200 dark:bg-red-950/30 dark:border-red-800">
             <p className="text-sm text-red-700 dark:text-red-400">
               {jobStatus.error_message}

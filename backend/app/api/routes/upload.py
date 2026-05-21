@@ -12,7 +12,7 @@ from ...core.database import get_db
 from ...core.auth import get_current_user
 from ...models.user import User
 from ...models.job import Job
-from ...workers.tasks import process_job_sync
+from ...workers.tasks import process_job_sync, register_cancel_flag
 
 router = APIRouter()
 
@@ -79,6 +79,7 @@ async def upload_image(
 
     # Chay pipeline trong background thread (khong can Redis/Celery)
     job_id = job.id
+    register_cancel_flag(job_id)
 
     def run_pipeline(jid, fpath, opts):
         try:
