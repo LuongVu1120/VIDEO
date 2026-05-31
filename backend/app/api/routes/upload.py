@@ -23,7 +23,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 @router.post("/upload")
 async def upload_image(
     image: UploadFile = File(...),
-    num_images: int = Form(4),
+    num_images: int = Form(2),
     generate_video: bool = Form(True),
     video_duration: int = Form(10),
     platforms: str = Form("instagram"),

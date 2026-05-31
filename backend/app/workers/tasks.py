@@ -216,7 +216,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
     if not isinstance(style_data, dict):
         style_data = {"style": str(style_data)}
 
-    # Generate creative variations
+    # Generate creative variations — pass existing style_data to skip duplicate analyze() call
     _check_cancel(job_id)
     update_job_status(
         job_id, "processing", progress=10,
@@ -224,10 +224,15 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
         step_name="generate_variations"
     )
 
-    variations = analyzer._analyze_variation_workflow(image_base64)
+    variations = analyzer._analyze_variation_workflow(image_base64, existing_analysis=style_data)
     all_results = []
 
-    for idx, variation in enumerate(variations.get("variations", [])):
+    variation_list = variations.get("variations", [])
+    num_variations = len(variation_list) or 1
+    # num_images is the TOTAL images requested — divide evenly across variations
+    images_per_variation = max(1, options.get("num_images", 2) // num_variations)
+
+    for idx, variation in enumerate(variation_list):
         _check_cancel(job_id)
         variation_style = variation if isinstance(variation, dict) else {}
         blended_analysis = {
@@ -273,7 +278,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
         images = image_gen.generate_images(
             prompt=prompts.get("image_prompt", ""),
             negative=prompts.get("negative_prompt", ""),
-            n=options.get("num_images", 4),
+            n=images_per_variation,
         )
 
         # ==================== STEP 4: VIDEO GENERATION ====================

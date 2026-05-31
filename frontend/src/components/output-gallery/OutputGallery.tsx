@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Check, Copy, Download, Edit2, RefreshCw,
@@ -13,6 +13,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
+
+const BACKEND_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/api\/v1$/, "");
+
+function toDisplayUrl(url: string): string {
+  if (!url) return url;
+  if (url.startsWith("http")) return url;
+  return `${BACKEND_BASE}${url}`;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -266,12 +274,14 @@ export function OutputGallery({ jobId }: { jobId: string }) {
         {/* ── Images Tab ─────────────────────────────────────────────────── */}
         <TabsContent value="images">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {output.images.map((url, idx) => (
+            {output.images.map((url, idx) => {
+              const displayUrl = toDisplayUrl(url);
+              return (
               <div key={idx}>
                 <Card className="overflow-hidden group">
                   <div className="relative aspect-video bg-neutral-100 dark:bg-neutral-900">
                     <Image
-                      src={url}
+                      src={displayUrl}
                       alt={`Generated architecture ${idx + 1}`}
                       fill
                       className="object-cover"
@@ -281,7 +291,7 @@ export function OutputGallery({ jobId }: { jobId: string }) {
                   <CardContent className="p-3 flex justify-between items-center">
                     <span className="text-sm text-neutral-500">Image {idx + 1}</span>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => window.open(url, "_blank")} title="Download">
+                      <Button variant="ghost" size="sm" onClick={() => window.open(displayUrl, "_blank")} title="Download">
                         <Download className="h-4 w-4" />
                       </Button>
                       <Button
@@ -347,7 +357,8 @@ export function OutputGallery({ jobId }: { jobId: string }) {
                   </Card>
                 )}
               </div>
-            ))}
+            );
+          })}
           </div>
         </TabsContent>
 
@@ -359,10 +370,10 @@ export function OutputGallery({ jobId }: { jobId: string }) {
                 <div className="relative aspect-video bg-neutral-100 dark:bg-neutral-900">
                   <video
                     key={output.video_url}
-                    src={output.video_url}
+                    src={toDisplayUrl(output.video_url!)}
                     controls
                     className="w-full h-full"
-                    poster={output.images[0]}
+                    poster={output.images[0] ? toDisplayUrl(output.images[0]) : undefined}
                   />
                 </div>
                 <CardContent className="p-4 flex justify-between items-center">
