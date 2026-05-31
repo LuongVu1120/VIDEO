@@ -85,7 +85,7 @@ was adjusted.
 
         client = OpenAI(api_key=settings.OPENAI_API_KEY)
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[{
                 "role": "user",
                 "content": [
@@ -131,7 +131,7 @@ was adjusted.
         environment = style_analysis.get("environment", "natural")
 
         prompt = f"""You are an expert architect and AI art director. Based on a reference building analysis,
-        generate 4 CREATIVE VARIATIONS of the architectural design.
+        generate 2 CREATIVE VARIATIONS of the architectural design.
 
         REFERENCE STYLE: {style}
         REFERENCE MATERIALS: {materials}
@@ -159,11 +159,11 @@ was adjusted.
         - environment: environment setting
         - rationale: 1 sentence explaining how this differs from the original
 
-        Return JSON: {{"variations": [...]}}
+        Return exactly 2 variations. Return JSON: {{"variations": [...]}}
         """
 
         response = client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
             temperature=0.85,  # Higher temperature for creativity
@@ -171,13 +171,17 @@ was adjusted.
         content = response.choices[0].message.content
         return self._ensure_json(content)
 
-    def _analyze_variation_workflow(self, image_base64: str) -> dict:
+    def _analyze_variation_workflow(self, image_base64: str, existing_analysis: dict = None) -> dict:
         """
         Workflow hoan chinh: phan tich anh -> tao bien the -> tra ve ca hai.
+        Pass existing_analysis to skip the analyze() call if already done.
         """
-        # Step 1: Analyze reference
-        analysis_str = self.analyze(image_base64)
-        analysis = json.loads(analysis_str)
+        # Step 1: Analyze reference (skip if caller already has it)
+        if existing_analysis:
+            analysis = existing_analysis
+        else:
+            analysis_str = self.analyze(image_base64)
+            analysis = json.loads(analysis_str)
 
         # Step 2: Generate variations
         variations_str = self.generate_variation_directions(analysis)

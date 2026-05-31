@@ -23,11 +23,16 @@ from .social_poster import SocialPoster
 
 def _get_sync_db_url() -> str:
     import os
-    db_path = os.path.join(
-        os.path.dirname(__file__), "..", "..", "arch_video.db"
-    )
-    if os.path.exists(db_path):
-        return f"sqlite:///{os.path.abspath(db_path)}"
+    db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "arch_video.db"))
+    sqlite_url = f"sqlite:///{db_path}"
+
+    if settings.FORCE_POSTGRES:
+        url = settings.DATABASE_URL_SYNC or settings.DATABASE_URL
+        return url.replace("+aiosqlite", "").replace("+asyncpg", "+psycopg2")
+
+    if settings.DATABASE_URL.startswith("postgresql+asyncpg"):
+        return sqlite_url
+
     url = settings.DATABASE_URL_SYNC or settings.DATABASE_URL
     return url.replace("+aiosqlite", "").replace("+asyncpg", "")
 

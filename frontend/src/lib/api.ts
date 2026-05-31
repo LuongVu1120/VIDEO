@@ -51,6 +51,13 @@ class ApiClient {
     }>(`/jobs/${jobId}`);
   }
 
+  async cancelJob(jobId: string) {
+    return this.request<{ job_id: string; cancelled: boolean }>(
+      `/jobs/${jobId}/cancel`,
+      { method: "POST" }
+    );
+  }
+
   async listJobs(skip = 0, limit = 20) {
     return this.request<
       Array<{

@@ -3,7 +3,10 @@
 import time
 import base64
 import requests
+from pathlib import Path
 from ..core.config import settings
+
+_BACKEND_DIR = Path(__file__).parent.parent.parent  # VIDEO/backend/
 
 
 class VideoGenerator:
@@ -40,9 +43,10 @@ class VideoGenerator:
 
         # Get image as base64
         image_data = self._get_image_base64(image_url_or_path)
+        mime_type = "image/png" if image_url_or_path.endswith(".png") else "image/jpeg"
 
         # Step 1: Create prediction (predictLongRunning)
-        operation_resp = self._create_veo_task(api_key, image_data, prompt)
+        operation_resp = self._create_veo_task(api_key, image_data, prompt, mime_type)
 
         operation_name = operation_resp.get("name")
         if not operation_name:
@@ -88,7 +92,7 @@ class VideoGenerator:
 
         raise TimeoutError("Google Veo video generation timed out")
 
-    def _create_veo_task(self, api_key: str, image_base64: str, prompt: str) -> dict:
+    def _create_veo_task(self, api_key: str, image_base64: str, prompt: str, mime_type: str = "image/jpeg") -> dict:
         """Create a Veo 3.1 image-to-video task via predictLongRunning."""
         url = (
             "https://generativelanguage.googleapis.com/v1beta/"
@@ -101,7 +105,7 @@ class VideoGenerator:
                     "prompt": prompt,
                     "image": {
                         "bytesBase64Encoded": image_base64,
-                        "mimeType": "image/jpeg"
+                        "mimeType": mime_type
                     }
                 }
             ],
@@ -178,17 +182,23 @@ class VideoGenerator:
 
         return download_uri
 
-    def _get_image_base64(self, image_url_or_path: str) -> str:
-        """Fetch an image and return its base64-encoded content."""
+    def _resolve_to_bytes(self, image_url_or_path: str) -> bytes:
+        """Return raw image bytes regardless of whether input is URL or path."""
         if image_url_or_path.startswith("http://") or image_url_or_path.startswith("https://"):
-            # Download from URL
             resp = requests.get(image_url_or_path, timeout=60)
             resp.raise_for_status()
-            return base64.b64encode(resp.content).decode("utf-8")
+            return resp.content
+        # /output/images/gen_xxx.png → backend/output/images/gen_xxx.png
+        if image_url_or_path.startswith("/output"):
+            local_path = _BACKEND_DIR / image_url_or_path.lstrip("/")
         else:
-            # Read from local file
-            with open(image_url_or_path, "rb") as f:
-                return base64.b64encode(f.read()).decode("utf-8")
+            local_path = Path(image_url_or_path)
+        with open(local_path, "rb") as f:
+            return f.read()
+
+    def _get_image_base64(self, image_url_or_path: str) -> str:
+        """Fetch an image and return its base64-encoded content."""
+        return base64.b64encode(self._resolve_to_bytes(image_url_or_path)).decode("utf-8")
 
     # ==================== Runway ML (Fallback) ====================
 
@@ -200,12 +210,19 @@ class VideoGenerator:
             "X-Runway-Version": "2024-11-06"
         }
 
+        # Runway requires https:// URL or data:image/... base64
+        if image_url.startswith("http://") or image_url.startswith("https://"):
+            prompt_image = image_url
+        else:
+            img_bytes = self._resolve_to_bytes(image_url)
+            prompt_image = f"data:image/png;base64,{base64.b64encode(img_bytes).decode()}"
+
         # 9:16 portrait for mobile phones (TikTok/Reels/Shorts)
         payload = {
             "model": "gen3a_turbo",
-            "promptImage": image_url,
+            "promptImage": prompt_image,
             "promptText": prompt,
-            "ratio": "720:1280",
+            "ratio": "768:1280",
             "duration": 10,
             "watermark": False
         }

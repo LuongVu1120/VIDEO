@@ -10,7 +10,8 @@ from .api.routes import router as api_router
 from .services.scheduler_service import start_scheduler, stop_scheduler
 
 # Ensure output folder exists (served as static files for branded images/videos)
-_OUTPUT_DIR = Path(__file__).parent.parent.parent / "output"
+# backend/app/main.py → parent.parent = backend/ → output = backend/output/
+_OUTPUT_DIR = Path(__file__).parent.parent / "output"
 _OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 

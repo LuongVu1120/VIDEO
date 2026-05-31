@@ -17,7 +17,7 @@ from typing import Optional
 from PIL import Image, ImageDraw, ImageFont
 
 
-OUTPUT_ROOT = Path(__file__).parent.parent.parent.parent / "output"
+OUTPUT_ROOT = Path(__file__).parent.parent.parent / "output"
 OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
 
 # Try Windows fonts → Linux fonts → Pillow default (in that order)

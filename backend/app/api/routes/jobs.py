@@ -4,6 +4,7 @@ from sqlalchemy import select
 
 from ...core.database import get_db
 from ...models.job import Job
+from ...workers.tasks import request_cancel
 
 router = APIRouter()
 
@@ -34,6 +35,34 @@ async def get_job_status(
         "error_message": job.error_message,
         "created_at": job.created_at.isoformat() if job.created_at else None,
     }
+
+
+@router.post("/{job_id}/cancel")
+async def cancel_job(
+    job_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(Job).where(Job.id == job_id))
+    job = result.scalar_one_or_none()
+
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.status not in ("queued", "processing"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot cancel a job with status '{job.status}'"
+        )
+
+    signalled = request_cancel(job_id)
+
+    # If the thread hasn't started yet (queued with no flag), mark cancelled directly
+    if not signalled:
+        job.status = "cancelled"
+        job.error_message = "Stopped by user"
+        await db.commit()
+
+    return {"job_id": job_id, "cancelled": True}
 
 
 @router.get("/")

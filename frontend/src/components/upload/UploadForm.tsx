@@ -38,7 +38,7 @@ const EXAMPLE_HINTS = [
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [numImages, setNumImages] = useState(4);
+  const [numImages, setNumImages] = useState(2);
   const [generateVideo, setGenerateVideo] = useState(true);
   const [platforms, setPlatforms] = useState<string[]>(["instagram"]);
   const [autoPost, setAutoPost] = useState(false);
