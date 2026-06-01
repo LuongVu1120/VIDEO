@@ -38,6 +38,8 @@ async def upload_image(
     if image.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Only JPEG, PNG, or WebP images are allowed")
 
+    video_duration = max(3, min(15, video_duration))
+
     # Save file
     file_ext = image.filename.split(".")[-1] if image.filename else "jpg"
     file_name = f"{uuid.uuid4()}.{file_ext}"

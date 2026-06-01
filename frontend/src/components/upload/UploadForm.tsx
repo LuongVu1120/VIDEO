@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Upload, ImageIcon, Video, Hash, Send, Lightbulb, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
@@ -40,6 +41,7 @@ export function UploadForm() {
   const [preview, setPreview] = useState<string | null>(null);
   const [numImages, setNumImages] = useState(2);
   const [generateVideo, setGenerateVideo] = useState(true);
+  const [videoDuration, setVideoDuration] = useState(5);
   const [platforms, setPlatforms] = useState<string[]>(["instagram"]);
   const [autoPost, setAutoPost] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -81,6 +83,15 @@ export function UploadForm() {
     );
   };
 
+  const handleVideoDurationChange = (value: string) => {
+    const next = Number.parseInt(value, 10);
+    if (Number.isNaN(next)) {
+      setVideoDuration(5);
+      return;
+    }
+    setVideoDuration(Math.max(3, Math.min(15, next)));
+  };
+
   const handleSubmit = async () => {
     if (!file) {
       toast({ title: "Error", description: "Please select an image first", variant: "destructive" });
@@ -91,6 +102,7 @@ export function UploadForm() {
     formData.append("image", file);
     formData.append("num_images", numImages.toString());
     formData.append("generate_video", generateVideo.toString());
+    formData.append("video_duration", videoDuration.toString());
     formData.append("platforms", platforms.join(","));
     formData.append("auto_post", autoPost.toString());
     formData.append("user_description", userDescription.trim());
@@ -299,6 +311,26 @@ export function UploadForm() {
               {generateVideo ? "Yes" : "No"}
             </Button>
           </div>
+
+          {generateVideo && (
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Video Duration</Label>
+                <p className="text-xs text-neutral-500">3-15 seconds. Longer videos cost more credits</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min={3}
+                  max={15}
+                  value={videoDuration}
+                  onChange={(e) => handleVideoDurationChange(e.target.value)}
+                  className="w-20 text-right"
+                />
+                <span className="text-sm text-neutral-500">seconds</span>
+              </div>
+            </div>
+          )}
 
           {/* Platforms */}
           <div className="space-y-3">

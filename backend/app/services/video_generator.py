@@ -1,7 +1,8 @@
-"""Step 4: Video Generation - Generate cinematic video from image using Google Veo 3.1 (Gemini API)."""
+"""Step 4: Video Generation - Generate cinematic video from image."""
 
 import time
 import base64
+import os
 import requests
 from pathlib import Path
 from ..core.config import settings
@@ -10,9 +11,15 @@ _BACKEND_DIR = Path(__file__).parent.parent.parent  # VIDEO/backend/
 
 
 class VideoGenerator:
-    def generate(self, image_url_or_path: str, prompt: str) -> str:
-        """Generate video using Google Veo 3.1 (primary) or Runway (fallback).
+    def generate(self, image_url_or_path: str, prompt: str, duration_seconds: int | None = None) -> str:
+        """Generate video using fal.ai, Google Veo 3.1, or Runway.
         Returns a mock placeholder if no video API is configured."""
+        if settings.FAL_KEY:
+            try:
+                return self._generate_fal(image_url_or_path, prompt, duration_seconds)
+            except Exception as e:
+                print(f"fal.ai video generation failed: {e}")
+
         # Try Google Veo 3.1 (best quality)
         if settings.GOOGLE_API_KEY:
             try:
@@ -23,7 +30,7 @@ class VideoGenerator:
         # Fallback to Runway
         if settings.RUNWAY_API_KEY:
             try:
-                return self._generate_runway(image_url_or_path, prompt)
+                return self._generate_runway(image_url_or_path, prompt, duration_seconds)
             except Exception as e:
                 print(f"Runway fallback also failed: {e}")
 
@@ -32,6 +39,109 @@ class VideoGenerator:
         from datetime import datetime
         print("No video API configured — returning mock video placeholder")
         return f"mock_video_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+
+    # ==================== fal.ai ====================
+
+    def _generate_fal(self, image_url_or_path: str, prompt: str, duration_seconds: int | None = None) -> str:
+        """Generate image-to-video through fal.ai."""
+        if not settings.FAL_KEY:
+            raise ValueError("FAL_KEY not configured")
+
+        try:
+            import fal_client
+        except ImportError as exc:
+            raise RuntimeError(
+                "fal-client is not installed. Run: pip install -r backend/requirements.txt"
+            ) from exc
+
+        os.environ["FAL_KEY"] = settings.FAL_KEY
+
+        endpoint = settings.FAL_VIDEO_MODEL
+        image_url = self._prepare_fal_image_url(image_url_or_path, fal_client)
+        arguments = self._build_fal_arguments(endpoint, image_url, prompt, duration_seconds)
+
+        print(f"fal.ai video endpoint: {endpoint}")
+        result = fal_client.subscribe(
+            endpoint,
+            arguments=arguments,
+            with_logs=True,
+            on_queue_update=self._on_fal_queue_update,
+            client_timeout=settings.FAL_VIDEO_TIMEOUT_SECONDS,
+        )
+
+        video_url = self._extract_fal_video_url(result)
+        if not video_url:
+            raise Exception(f"fal.ai: No video URL in response: {result}")
+
+        print(f"fal.ai video generated: {video_url}")
+        return video_url
+
+    def _prepare_fal_image_url(self, image_url_or_path: str, fal_client) -> str:
+        """Return a public image URL usable by fal video endpoints."""
+        if image_url_or_path.startswith("http://") or image_url_or_path.startswith("https://"):
+            return image_url_or_path
+
+        local_path = self._resolve_local_path(image_url_or_path)
+        return fal_client.upload_file(str(local_path))
+
+    def _build_fal_arguments(
+        self,
+        endpoint: str,
+        image_url: str,
+        prompt: str,
+        duration_seconds: int | None = None,
+    ) -> dict:
+        """Build endpoint-specific fal arguments."""
+        image_key = "start_image_url" if "/v3/" in endpoint else "image_url"
+        duration = duration_seconds if duration_seconds else settings.FAL_VIDEO_DURATION
+        arguments = {
+            image_key: image_url,
+            "prompt": prompt or "Cinematic architectural walkthrough, slow camera movement, realistic lighting.",
+            "duration": str(duration or "5"),
+        }
+
+        if settings.FAL_VIDEO_GENERATE_AUDIO:
+            arguments["generate_audio"] = True
+
+        return arguments
+
+    @staticmethod
+    def _on_fal_queue_update(update):
+        """Print fal queue logs when available."""
+        logs = getattr(update, "logs", None) or []
+        for log in logs:
+            message = log.get("message") if isinstance(log, dict) else str(log)
+            if message:
+                print(f"fal.ai: {message}")
+
+    @staticmethod
+    def _extract_fal_video_url(result: dict) -> str:
+        """Extract a video URL from common fal response shapes."""
+        if not isinstance(result, dict):
+            return ""
+
+        for key in ("video", "output", "url", "video_url"):
+            candidate = result.get(key)
+            if isinstance(candidate, str):
+                return candidate
+            if isinstance(candidate, dict) and candidate.get("url"):
+                return candidate["url"]
+            if isinstance(candidate, list) and candidate:
+                first = candidate[0]
+                if isinstance(first, str):
+                    return first
+                if isinstance(first, dict) and first.get("url"):
+                    return first["url"]
+
+        videos = result.get("videos")
+        if isinstance(videos, list) and videos:
+            first = videos[0]
+            if isinstance(first, str):
+                return first
+            if isinstance(first, dict) and first.get("url"):
+                return first["url"]
+
+        return ""
 
     # ==================== Google Veo 3.1 (Gemini API) ====================
 
@@ -189,12 +299,15 @@ class VideoGenerator:
             resp.raise_for_status()
             return resp.content
         # /output/images/gen_xxx.png → backend/output/images/gen_xxx.png
-        if image_url_or_path.startswith("/output"):
-            local_path = _BACKEND_DIR / image_url_or_path.lstrip("/")
-        else:
-            local_path = Path(image_url_or_path)
+        local_path = self._resolve_local_path(image_url_or_path)
         with open(local_path, "rb") as f:
             return f.read()
+
+    def _resolve_local_path(self, image_url_or_path: str) -> Path:
+        """Resolve app URL paths such as /output/images/x.png to local files."""
+        if image_url_or_path.startswith("/output"):
+            return _BACKEND_DIR / image_url_or_path.lstrip("/")
+        return Path(image_url_or_path)
 
     def _get_image_base64(self, image_url_or_path: str) -> str:
         """Fetch an image and return its base64-encoded content."""
@@ -202,7 +315,7 @@ class VideoGenerator:
 
     # ==================== Runway ML (Fallback) ====================
 
-    def _generate_runway(self, image_url: str, prompt: str) -> str:
+    def _generate_runway(self, image_url: str, prompt: str, duration_seconds: int | None = None) -> str:
         """Runway image-to-video fallback."""
         headers = {
             "Authorization": f"Bearer {settings.RUNWAY_API_KEY}",
@@ -223,7 +336,7 @@ class VideoGenerator:
             "promptImage": prompt_image,
             "promptText": prompt,
             "ratio": "768:1280",
-            "duration": 10,
+            "duration": duration_seconds or 10,
             "watermark": False
         }
 

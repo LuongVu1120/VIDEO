@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     REPLICATE_API_TOKEN: Optional[str] = None
 
     # AI - Video Generation
+    FAL_KEY: Optional[str] = None
+    FAL_VIDEO_MODEL: str = "fal-ai/kling-video/o3/standard/image-to-video"
+    FAL_VIDEO_DURATION: str = "5"
+    FAL_VIDEO_GENERATE_AUDIO: bool = False
+    FAL_VIDEO_TIMEOUT_SECONDS: int = 600
     GOOGLE_API_KEY: Optional[str] = None  # Google Veo 3.1 (Gemini API)
     RUNWAY_API_KEY: Optional[str] = None  # Runway fallback
 

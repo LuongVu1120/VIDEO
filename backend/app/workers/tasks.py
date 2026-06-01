@@ -291,7 +291,11 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
                 step_name=f"video_generation_v{idx+1}"
             )
             video_gen = VideoGenerator()
-            video_url = video_gen.generate(images[0], prompts.get("video_prompt", ""))
+            video_url = video_gen.generate(
+                images[0],
+                prompts.get("video_prompt", ""),
+                duration_seconds=options.get("video_duration"),
+            )
 
         # ==================== BRANDING / WATERMARK ====================
         _check_cancel(job_id)
