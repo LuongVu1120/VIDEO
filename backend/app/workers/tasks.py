@@ -10,7 +10,7 @@ import os
 import threading
 from pathlib import Path
 from datetime import datetime, timezone
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 # ── Cancel flag registry ──────────────────────────────────────────────────────
@@ -60,6 +60,8 @@ from ..services.caption_writer import CaptionWriter
 from ..services.music_suggester import MusicSuggester
 from ..services.social_poster import SocialPoster
 from ..services.watermark_service import apply_branding_to_job
+from ..services.video_cost import estimate_fal_video_usd, clamp_duration_for_model
+from ..services.bgm_service import apply_bgm_to_video
 
 
 def _get_sync_db_url() -> str:
@@ -82,7 +84,16 @@ def _get_sync_db_url() -> str:
     return sqlite_url
 
 
-sync_engine = create_engine(_get_sync_db_url(), echo=False)
+def _sync_sqlite_pragma(dbapi_conn, connection_record):
+    from ..core.database import _configure_sqlite_connection
+    _configure_sqlite_connection(dbapi_conn, connection_record)
+
+
+_sync_url = _get_sync_db_url()
+_sync_connect_args = {"check_same_thread": False, "timeout": 30} if _sync_url.startswith("sqlite") else {}
+sync_engine = create_engine(_sync_url, echo=False, connect_args=_sync_connect_args)
+if _sync_url.startswith("sqlite"):
+    event.listens_for(sync_engine, "connect")(_sync_sqlite_pragma)
 SyncSession = sessionmaker(bind=sync_engine)
 
 
@@ -132,6 +143,7 @@ def _make_stream_callback(job_id: str, step: str, batch_size: int = 80):
 def update_job_status(job_id: str, status: str, progress: int = None,
                       current_step: str = None, step_name: str = None):
     """Update job status in DB and send WebSocket notification."""
+    steps_snapshot = None
     db: Session = SyncSession()
     try:
         job = db.query(Job).filter(Job.id == job_id).first()
@@ -147,17 +159,21 @@ def update_job_status(job_id: str, status: str, progress: int = None,
             steps = list(job.steps_completed) if isinstance(job.steps_completed, list) else []
             steps.append(step_name)
             job.steps_completed = steps
+            steps_snapshot = steps
         job.updated_at = datetime.now(timezone.utc)
         db.commit()
     finally:
         db.close()
 
-    _send_ws_update(job_id, {
+    ws_payload = {
         "job_id": job_id,
         "status": status,
         "progress": progress,
         "current_step": current_step,
-    })
+    }
+    if steps_snapshot is not None:
+        ws_payload["steps_completed"] = steps_snapshot
+    _send_ws_update(job_id, ws_payload)
 
 
 # ======================================================================
@@ -194,6 +210,20 @@ def process_job_sync(job_id: str, image_path: str, options: dict):
 # CORE PIPELINE LOGIC (dung chung cho ca Celery va Sync)
 # ======================================================================
 
+def _estimate_job_cost_usd(options: dict, all_results: list) -> float:
+    """Rough USD estimate: vision/prompt/caption baseline + fal video + images."""
+    base = 0.12 * (len(all_results) or 1)
+    num_images = sum(len(r.get("images") or []) for r in all_results)
+    image_cost = num_images * 0.04
+    video_count = sum(1 for r in all_results if r.get("video_url"))
+    if options.get("generate_video", True) and video_count:
+        duration = clamp_duration_for_model(int(options.get("video_duration") or 5))
+        video_cost = estimate_fal_video_usd(duration, video_count)
+    else:
+        video_cost = 0.0
+    return round(base + image_cost + video_cost, 3)
+
+
 def _run_pipeline(job_id: str, image_path: str, options: dict):
     """Core pipeline: 7 buoc chinh."""
     platforms = options.get("platforms", ["instagram", "facebook", "tiktok", "youtube"])
@@ -226,11 +256,16 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
 
     variations = analyzer._analyze_variation_workflow(image_base64, existing_analysis=style_data)
     all_results = []
+    video_errors = []
 
     variation_list = variations.get("variations", [])
     num_variations = len(variation_list) or 1
-    # num_images is the TOTAL images requested — divide evenly across variations
-    images_per_variation = max(1, options.get("num_images", 2) // num_variations)
+    # num_images is the TOTAL images requested — divide evenly across variations (0 = skip)
+    num_images_total = max(0, int(options.get("num_images", 2)))
+    if num_images_total == 0:
+        images_per_variation = 0
+    else:
+        images_per_variation = max(1, num_images_total // num_variations)
 
     for idx, variation in enumerate(variation_list):
         _check_cancel(job_id)
@@ -268,34 +303,70 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
 
         # ==================== STEP 3: IMAGE GENERATION ====================
         _check_cancel(job_id)
-        update_job_status(
-            job_id, "processing", progress=20 + (idx * 15),
-            current_step=f"Generating images for variation {idx+1}...",
-            step_name=f"image_generation_v{idx+1}"
-        )
-
-        image_gen = ImageGenerator()
-        images = image_gen.generate_images(
-            prompt=prompts.get("image_prompt", ""),
-            negative=prompts.get("negative_prompt", ""),
-            n=images_per_variation,
-        )
+        images: list = []
+        if images_per_variation > 0:
+            update_job_status(
+                job_id, "processing", progress=20 + (idx * 15),
+                current_step=f"Generating images for variation {idx+1}...",
+                step_name=f"image_generation_v{idx+1}"
+            )
+            image_gen = ImageGenerator()
+            images = image_gen.generate_images(
+                prompt=prompts.get("image_prompt", ""),
+                negative=prompts.get("negative_prompt", ""),
+                n=images_per_variation,
+            )
+        else:
+            update_job_status(
+                job_id, "processing", progress=20 + (idx * 15),
+                current_step=f"Skipping image generation for variation {idx+1} (using upload only)...",
+                step_name=f"image_generation_v{idx+1}"
+            )
 
         # ==================== STEP 4: VIDEO GENERATION ====================
         _check_cancel(job_id)
         video_url = None
-        if options.get("generate_video", True) and images:
+        video_source = images[0] if images else image_path
+        max_video_variations = min(
+            int(options.get("max_video_variations", settings.VIDEO_MAX_VARIATIONS)),
+            settings.VIDEO_MAX_VARIATIONS,
+        )
+        max_video_variations = max(1, min(2, max_video_variations))
+
+        if (
+            options.get("generate_video", True)
+            and video_source
+            and idx < max_video_variations
+        ):
             update_job_status(
                 job_id, "processing", progress=25 + (idx * 15),
-                current_step=f"Generating video for variation {idx+1}...",
-                step_name=f"video_generation_v{idx+1}"
+                current_step=f"Generating video for variation {idx+1}..."
             )
             video_gen = VideoGenerator()
-            video_url = video_gen.generate(
-                images[0],
-                prompts.get("video_prompt", ""),
-                duration_seconds=options.get("video_duration"),
-            )
+            try:
+                video_duration = clamp_duration_for_model(
+                    int(options.get("video_duration") or 5)
+                )
+                video_url = video_gen.generate(
+                    video_source,
+                    prompts.get("video_prompt", ""),
+                    duration_seconds=video_duration,
+                    user_description=user_description,
+                    negative_prompt=prompts.get("negative_prompt", ""),
+                )
+                update_job_status(
+                    job_id, "processing", progress=25 + (idx * 15),
+                    current_step=f"Generated video for variation {idx+1}.",
+                    step_name=f"video_generation_v{idx+1}"
+                )
+            except Exception as e:
+                video_error = f"Variation {idx+1}: {e}"
+                video_errors.append(video_error)
+                print(f"[Video] Generation failed for variation {idx+1}: {e}")
+                update_job_status(
+                    job_id, "processing", progress=25 + (idx * 15),
+                    current_step=f"Video generation failed for variation {idx+1}: {e}"
+                )
 
         # ==================== BRANDING / WATERMARK ====================
         _check_cancel(job_id)
@@ -317,9 +388,30 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
             except Exception as e:
                 print(f"[Watermark] Skipped: {e}")
 
+        # ==================== BACKGROUND MUSIC (FFmpeg) ====================
+        if video_url:
+            _check_cancel(job_id)
+            mood_for_bgm = blended_analysis.get("mood") or style_data.get("mood", "peaceful")
+            update_job_status(
+                job_id, "processing", progress=25 + (idx * 15),
+                current_step=f"Adding background music for variation {idx+1}...",
+                step_name=f"bgm_mux_v{idx+1}",
+            )
+            try:
+                video_url = apply_bgm_to_video(
+                    video_url,
+                    mood=str(mood_for_bgm),
+                    job_id=f"{job_id}_v{idx+1}",
+                ) or video_url
+            except Exception as e:
+                print(f"[BGM] Skipped for variation {idx+1}: {e}")
+
+        prompts_record = dict(prompts)
+        if user_description:
+            prompts_record["user_description"] = user_description
         all_results.append({
             "variation": blended_analysis,
-            "prompts": prompts,
+            "prompts": prompts_record,
             "images": images,
             "video_url": video_url,
         })
@@ -368,8 +460,9 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
 
     social_poster = SocialPoster()
     first_result = all_results[0] if all_results else {}
-    first_image = (first_result.get("images") or [None])[0]
+    first_image = (first_result.get("images") or [None])[0] or image_path
     first_video = first_result.get("video_url")
+    all_videos = [r["video_url"] for r in all_results if r.get("video_url")]
 
     post_results = social_poster.post_to_all(
         image_url=first_image,
@@ -387,19 +480,28 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
             variations=variations,
             prompts=[r["prompts"] for r in all_results],
             images=[img for r in all_results for img in (r.get("images") or [])],
-            videos=[r["video_url"] for r in all_results if r.get("video_url")],
+            videos=all_videos,
+            video_url=first_video,
             captions=captions,
             music_suggestions=music_suggestions,
             social_post_preview=post_results,
-            cost_usd=0.675 * (len(all_results) or 1),
+            cost_usd=_estimate_job_cost_usd(options, all_results),
         )
         db.add(output)
 
         job = db.query(Job).filter(Job.id == job_id).first()
+        steps_snapshot = []
         if job:
             job.status = "completed"
             job.progress = 100
             job.current_step = f"Completed! Generated {len(all_results)} variations."
+            steps_snapshot = (
+                list(job.steps_completed)
+                if isinstance(job.steps_completed, list)
+                else []
+            )
+            if video_errors and not all_videos:
+                job.error_message = "\n".join(video_errors)
             job.completed_at = datetime.now(timezone.utc)
         db.commit()
     finally:
@@ -409,7 +511,8 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
         "job_id": job_id,
         "status": "completed",
         "progress": 100,
-        "current_step": f"Generated {len(all_results)} variations across {len(platforms)} platforms!",
+        "current_step": f"Completed! Generated {len(all_results)} variations.",
+        "steps_completed": steps_snapshot,
         "results_summary": {
             "variations": len(all_results),
             "total_images": sum(len(r.get("images") or []) for r in all_results),

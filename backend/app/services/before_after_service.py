@@ -258,12 +258,11 @@ def generate_before_after_caption(effect: EffectType, platform: str = "instagram
         base_url=settings.DEEPSEEK_BASE_URL,
     )
 
-    platform_note = {
-        "instagram": "150 words, 20 hashtags, aesthetic tone",
-        "tiktok": "60 words, hook first line, 5 hashtags, energetic",
-        "facebook": "100 words, warm community tone, 10 hashtags",
-        "youtube": "SEO title + 120-word description, 5 hashtags",
-    }.get(platform, "100 words, 10 hashtags")
+    from .caption_utils import MAX_POST_CAPTION_WORDS, clamp_caption_fields
+
+    platform_note = (
+        f"caption under 20 words (max {MAX_POST_CAPTION_WORDS}), 10-15 hashtags, short hook"
+    )
 
     effect_desc = {
         "split": "split-screen side-by-side comparison",
@@ -291,8 +290,14 @@ def generate_before_after_caption(effect: EffectType, platform: str = "instagram
     match = re.search(r'\{.*\}', raw, re.DOTALL)
     if match:
         try:
-            return json.loads(match.group(0))
+            data = json.loads(match.group(0))
+            return {
+                "en": clamp_caption_fields(data.get("en") or {}),
+                "vi": clamp_caption_fields(data.get("vi") or {}),
+            }
         except Exception:
             pass
-    return {"en": {"title": "", "caption": raw, "hashtags": [], "call_to_action": ""},
-            "vi": {"title": "", "caption": "", "hashtags": [], "call_to_action": ""}}
+    return {
+        "en": clamp_caption_fields({"title": "", "caption": raw, "hashtags": [], "call_to_action": ""}),
+        "vi": clamp_caption_fields({"title": "", "caption": "", "hashtags": [], "call_to_action": ""}),
+    }

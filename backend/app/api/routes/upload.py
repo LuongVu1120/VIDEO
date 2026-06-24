@@ -1,11 +1,10 @@
 import os
 import uuid
 import aiofiles
-import asyncio
 import threading
 import traceback
 import sys
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.database import get_db
@@ -22,10 +21,12 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/upload")
 async def upload_image(
+    background_tasks: BackgroundTasks,
     image: UploadFile = File(...),
     num_images: int = Form(2),
     generate_video: bool = Form(True),
-    video_duration: int = Form(10),
+    video_duration: int = Form(5),
+    max_video_variations: int = Form(1),
     platforms: str = Form("instagram"),
     auto_post: bool = Form(False),
     ai_provider: str = Form("openai"),
@@ -33,12 +34,25 @@ async def upload_image(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    print("[Upload] Request received")
     # Validate file type
     allowed_types = {"image/jpeg", "image/png", "image/webp"}
     if image.content_type not in allowed_types:
         raise HTTPException(status_code=400, detail="Only JPEG, PNG, or WebP images are allowed")
 
+    if num_images not in (0, 2, 4, 6):
+        raise HTTPException(
+            status_code=400,
+            detail="num_images must be 0, 2, 4, or 6",
+        )
+    if num_images == 0 and not generate_video:
+        raise HTTPException(
+            status_code=400,
+            detail="When num_images is 0, generate_video must be enabled",
+        )
+
     video_duration = max(3, min(15, video_duration))
+    max_video_variations = max(1, min(2, max_video_variations))
 
     # Save file
     file_ext = image.filename.split(".")[-1] if image.filename else "jpg"
@@ -62,7 +76,7 @@ async def upload_image(
         auto_post=auto_post,
         ai_provider=ai_provider,
         status="queued",
-        estimated_time_seconds=180,
+        estimated_time_seconds=120 if num_images == 0 else 180,
     )
 
     db.add(job)
@@ -73,30 +87,33 @@ async def upload_image(
         "num_images": num_images,
         "generate_video": generate_video,
         "video_duration": video_duration,
+        "max_video_variations": max_video_variations,
         "platforms": platforms_list,
         "auto_post": auto_post,
         "ai_provider": ai_provider,
         "user_description": user_description.strip()[:300],
     }
 
-    # Chay pipeline trong background thread (khong can Redis/Celery)
+    # Pipeline chạy SAU khi HTTP response trả về (tránh fetch pending / khóa SQLite)
     job_id = job.id
     register_cancel_flag(job_id)
 
     def run_pipeline(jid, fpath, opts):
         try:
             print(f"[Pipeline] Starting sync pipeline for job {jid}")
-            print(f"[Pipeline] file_path: {fpath}")
-            print(f"[Pipeline] options: {opts}")
             process_job_sync(jid, fpath, opts)
             print(f"[Pipeline] Completed sync pipeline for job {jid}")
         except Exception as e:
             print(f"[Pipeline] Fatal error for job {jid}: {e}")
             traceback.print_exc()
 
-    thread = threading.Thread(target=run_pipeline, args=(job_id, file_path, options), daemon=True)
-    thread.start()
-    print(f"[Pipeline] Thread started for job {job_id}")
+    def schedule_pipeline():
+        threading.Thread(
+            target=run_pipeline, args=(job_id, file_path, options), daemon=True
+        ).start()
+
+    background_tasks.add_task(schedule_pipeline)
+    print(f"[Upload] Job {job_id} queued — pipeline will start after response")
 
     return {
         "job_id": job.id,

@@ -1,8 +1,18 @@
 import os
 import sys
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 from .config import settings
+
+
+def _configure_sqlite_connection(dbapi_conn, _connection_record) -> None:
+    """WAL + busy_timeout — tránh upload API bị pending khi pipeline đang ghi DB."""
+    cursor = dbapi_conn.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA busy_timeout=30000")
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.close()
 
 
 # Database URL selection
@@ -26,7 +36,18 @@ elif _database_url.startswith("postgresql+asyncpg"):
 else:
     print(f"[DB] Using: {_database_url}")
 
-engine = create_async_engine(_database_url, echo=settings.DEBUG)
+_connect_args = {}
+if _database_url.startswith("sqlite"):
+    _connect_args = {"timeout": 30}
+
+engine = create_async_engine(_database_url, echo=settings.DEBUG, connect_args=_connect_args)
+
+if _database_url.startswith("sqlite"):
+
+    @event.listens_for(engine.sync_engine, "connect")
+    def _async_sqlite_pragma(dbapi_conn, connection_record):
+        _configure_sqlite_connection(dbapi_conn, connection_record)
+
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 

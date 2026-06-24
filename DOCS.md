@@ -236,6 +236,12 @@ FACEBOOK_PAGE_ACCESS_TOKEN=EAAxxxxx...  # Page Access Token (khác User token)
 # TikTok
 TIKTOK_ACCESS_TOKEN=...
 
+# YouTube Data API
+YOUTUBE_CLIENT_SECRETS_FILE=youtube_client_secret.json
+YOUTUBE_TOKEN_FILE=youtube_token.json
+YOUTUBE_PRIVACY_STATUS=private     # private | unlisted | public
+YOUTUBE_CATEGORY_ID=22             # 22 = People & Blogs
+
 # CORS (thêm domain frontend nếu deploy)
 CORS_ORIGINS=http://localhost:3000,https://yourdomain.com
 ```
@@ -247,6 +253,16 @@ CORS_ORIGINS=http://localhost:3000,https://yourdomain.com
 3. Thêm sản phẩm **Instagram Basic Display** + **Instagram Graph API**
 4. Tạo **System User** → Generate token với quyền: `instagram_content_publish`, `pages_manage_posts`, `pages_read_engagement`
 5. Convert sang **Long-Lived Token** (60 ngày hoặc vĩnh cửu với System User)
+
+### Hướng dẫn bật YouTube upload tự động
+
+1. Vào Google Cloud Console, bật **YouTube Data API v3**.
+2. Tạo OAuth Client dạng **Desktop app**, tải file JSON về project root, ví dụ `youtube_client_secret.json`.
+3. Cài dependency backend: `pip install -r backend/requirements.txt`.
+4. Chạy một lần: `python backend/scripts/youtube_oauth_setup.py`.
+5. Đăng nhập đúng kênh YouTube và cấp quyền upload. Script sẽ tạo `youtube_token.json`.
+
+Lưu ý: Google yêu cầu OAuth 2.0 cho upload. Dự án Google Cloud chưa được verify có thể bị giới hạn video upload ở chế độ `private`; muốn đăng `public` ổn định cần hoàn tất quy trình audit/verification của Google.
 
 ---
 

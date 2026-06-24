@@ -1,6 +1,7 @@
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -30,6 +31,17 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """Log mọi request ngay khi vào — dễ thấy frontend có gọi tới backend không."""
+    start = time.perf_counter()
+    print(f"[HTTP] {request.method} {request.url.path}")
+    response = await call_next(request)
+    ms = (time.perf_counter() - start) * 1000
+    print(f"[HTTP] {request.method} {request.url.path} -> {response.status_code} ({ms:.0f}ms)")
+    return response
+
 
 # CORS
 app.add_middleware(

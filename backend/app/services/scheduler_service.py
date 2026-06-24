@@ -13,10 +13,11 @@ from typing import Optional
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker, Session
 
 from ..core.config import settings
+from ..core.database import _configure_sqlite_connection
 from ..models.scheduled_post import ScheduledPost
 from .social_poster import SocialPoster
 
@@ -37,7 +38,15 @@ def _get_sync_db_url() -> str:
     return url.replace("+aiosqlite", "").replace("+asyncpg", "")
 
 
-_engine = create_engine(_get_sync_db_url(), echo=False)
+_sync_db_url = _get_sync_db_url()
+_connect_args = {"timeout": 30} if _sync_db_url.startswith("sqlite") else {}
+_engine = create_engine(_sync_db_url, echo=False, connect_args=_connect_args)
+if _sync_db_url.startswith("sqlite"):
+
+    @event.listens_for(_engine, "connect")
+    def _scheduler_sqlite_pragma(dbapi_conn, connection_record):
+        _configure_sqlite_connection(dbapi_conn, connection_record)
+
 _SessionLocal = sessionmaker(bind=_engine)
 
 _scheduler: Optional[BackgroundScheduler] = None

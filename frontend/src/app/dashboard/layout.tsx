@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { Building2, Upload, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 const NAV_ITEMS = [
-  { href: "/dashboard/upload", label: "New Upload", icon: Upload },
-  { href: "/dashboard/jobs", label: "My Jobs", icon: List },
+  { href: "/dashboard/upload", label: "Tạo nội dung", icon: Upload },
+  { href: "/dashboard/jobs", label: "Danh sách job", icon: List },
 ];
 
 export default function DashboardLayout({

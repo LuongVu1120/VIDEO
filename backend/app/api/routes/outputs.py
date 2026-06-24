@@ -15,7 +15,9 @@ from ...core.database import get_db
 from ...models.job import Job
 from ...models.output import Output
 from ...services.caption_writer import CaptionWriter
+from ...services.caption_utils import clamp_caption_fields, normalize_hashtags, CAPTION_MAX_HASHTAGS
 from ...services.image_generator import ImageGenerator
+from ...services.social_poster import SocialPoster
 
 router = APIRouter()
 
@@ -50,9 +52,90 @@ class RegenerateCaptionBody(BaseModel):
     extra_instruction: str = ""
 
 
+class PublishSocialBody(BaseModel):
+    platform: str  # instagram | youtube
+
+
 # ---------------------------------------------------------------------------
 # Helper
 # ---------------------------------------------------------------------------
+
+def _public_media_url(path: str | None) -> str | None:
+    if not path:
+        return None
+    if path.startswith("http://") or path.startswith("https://"):
+        return path
+    base = (settings.PUBLIC_MEDIA_BASE_URL or "http://127.0.0.1:8000").rstrip("/")
+    if path.startswith("/"):
+        return f"{base}{path}"
+    return path
+
+
+def _local_media_path(path: str | None) -> str | None:
+    """Đường dẫn file local cho YouTube upload."""
+    if not path:
+        return None
+    if path.startswith("http://") or path.startswith("https://"):
+        return path
+    if path.startswith("/output/"):
+        local = _PROJECT_ROOT / path.lstrip("/")
+        if local.exists():
+            return str(local)
+    uploads = _PROJECT_ROOT / "backend" / path
+    if uploads.exists():
+        return str(uploads)
+    bare = _PROJECT_ROOT / "backend" / "uploads" / os.path.basename(path)
+    if bare.exists():
+        return str(bare)
+    return None
+
+
+def _pick_post_image(output: Output) -> str | None:
+    for url in output.images or []:
+        if url:
+            return url
+    return None
+
+
+def _publish_sync(output: Output, platform: str) -> dict:
+    captions = output.captions or {}
+    if platform not in captions:
+        return {"status": "error", "error": f"No caption for platform: {platform}"}
+
+    poster = SocialPoster()
+    caption_data = captions[platform]
+    image_path = _pick_post_image(output)
+    video_path = output.video_url
+
+    if platform == "youtube":
+        if not video_path:
+            return {"status": "error", "error": "Cần có video để đăng YouTube."}
+        video_for_post = _local_media_path(video_path) or _public_media_url(video_path)
+        if not video_for_post:
+            return {"status": "error", "error": "Không tìm thấy file video."}
+        return poster.post_to_platform(
+            image_url="",
+            video_url=video_for_post,
+            caption_data=caption_data,
+            platform="youtube",
+            dry_run=False,
+        )
+
+    if platform == "instagram":
+        pub_video = _public_media_url(video_path) if video_path else None
+        pub_image = _public_media_url(image_path) if image_path else None
+        if not pub_video and not pub_image:
+            return {"status": "error", "error": "Cần ảnh hoặc video để đăng Instagram."}
+        return poster.post_to_platform(
+            image_url=pub_image or "",
+            video_url=pub_video,
+            caption_data=caption_data,
+            platform="instagram",
+            dry_run=False,
+        )
+
+    return {"status": "error", "error": f"Unsupported platform: {platform}"}
+
 
 async def _get_output_or_404(job_id: str, db: AsyncSession) -> Output:
     result = await db.execute(select(Output).where(Output.job_id == job_id))
@@ -80,6 +163,12 @@ async def get_output(
         raise HTTPException(status_code=400, detail="Job is not yet completed")
 
     output = await _get_output_or_404(job_id, db)
+    video_error = None
+    if job.generate_video and not output.video_url:
+        video_error = job.error_message or (
+            "Video generation was requested, but all video providers failed or returned no usable URL. "
+            "Check backend logs for fal.ai / Google Veo / Runway errors."
+        )
 
     return {
         "job_id": job_id,
@@ -89,6 +178,9 @@ async def get_output(
         "images": output.images,
         "videos": output.videos or [],
         "video_url": output.video_url,
+        "video_requested": job.generate_video,
+        "video_duration": job.video_duration,
+        "video_error": video_error,
         "captions": output.captions,
         "music_suggestions": output.music_suggestions,
         "social_post_preview": output.social_post_preview,
@@ -121,10 +213,11 @@ async def update_caption(
     if body.caption is not None:
         en["caption"] = body.caption
     if body.hashtags is not None:
-        en["hashtags"] = body.hashtags
+        en["hashtags"] = normalize_hashtags(body.hashtags, CAPTION_MAX_HASHTAGS)
     if body.call_to_action is not None:
         en["call_to_action"] = body.call_to_action
 
+    en = clamp_caption_fields(en)
     platform_data["en"] = en
     captions[body.platform] = platform_data
     output.captions = captions
@@ -268,3 +361,53 @@ async def regenerate_caption(
     await db.commit()
 
     return {"success": True, "platform": body.platform, "caption": new_caption}
+
+
+# ---------------------------------------------------------------------------
+# POST /outputs/{job_id}/publish — đăng ngay lên Instagram / YouTube
+# ---------------------------------------------------------------------------
+
+@router.post("/{job_id}/publish")
+async def publish_to_social(
+    job_id: str,
+    body: PublishSocialBody,
+    db: AsyncSession = Depends(get_db),
+):
+    """Đăng bài lên Instagram hoặc YouTube (cần token OAuth trong .env)."""
+    platform = body.platform.strip().lower()
+    if platform not in ("instagram", "youtube"):
+        raise HTTPException(status_code=400, detail="platform must be instagram or youtube")
+
+    result = await db.execute(select(Job).where(Job.id == job_id))
+    job = result.scalar_one_or_none()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.status != "completed":
+        raise HTTPException(status_code=400, detail="Job is not yet completed")
+
+    output = await _get_output_or_404(job_id, db)
+
+    try:
+        post_result = await asyncio.to_thread(_publish_sync, output, platform)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    status = post_result.get("status", "error")
+    if status not in ("posted", "dry_run_ok"):
+        raise HTTPException(
+            status_code=502,
+            detail=post_result.get("error") or post_result.get("note") or "Đăng bài thất bại",
+        )
+
+    preview = dict(output.social_post_preview or {})
+    preview[platform] = post_result
+    output.social_post_preview = preview
+    await db.commit()
+
+    return {
+        "success": True,
+        "platform": platform,
+        "status": status,
+        "post_url": post_result.get("post_url") or post_result.get("shorts_url"),
+        "result": post_result,
+    }

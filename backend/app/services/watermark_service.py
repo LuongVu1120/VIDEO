@@ -16,6 +16,8 @@ from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
+from .bgm_service import path_to_output_url
+
 
 OUTPUT_ROOT = Path(__file__).parent.parent.parent / "output"
 OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
@@ -249,6 +251,7 @@ def apply_branding_to_job(
         try:
             out = str(job_output_dir / "video_branded.mp4")
             branded_video = add_video_watermark(video_url, brand_name, brand_phone, position, out)
+            branded_video = path_to_output_url(branded_video)
             print(f"  [Watermark] Video branded -> {branded_video}")
         except Exception as e:
             print(f"  [Watermark] Video failed: {e} — using original")

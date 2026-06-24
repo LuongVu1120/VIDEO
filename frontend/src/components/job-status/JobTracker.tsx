@@ -18,15 +18,32 @@ interface JobStatus {
   error_message: string | null;
 }
 
-const STEP_LABELS: Record<string, string> = {
+const STEP_LABELS_VI: Record<string, string> = {
+  vision_analysis: "Phân tích phong cách kiến trúc",
+  prompt_writing: "Viết prompt tối ưu",
+  image_generation: "Tạo ảnh kiến trúc",
+  video_generation: "Tạo video cinematic",
+  bgm_mux: "Ghép nhạc nền",
+  caption_writing: "Viết caption & hashtag",
+};
+
+const STEP_LABELS_EN: Record<string, string> = {
   vision_analysis: "Analyzing architectural style",
   prompt_writing: "Writing optimized prompts",
   image_generation: "Generating architecture images",
   video_generation: "Creating cinematic video",
+  bgm_mux: "Adding background music",
   caption_writing: "Writing captions & hashtags",
 };
 
-const TOTAL_STEPS = 5;
+/** Backend may record step_name as e.g. prompt_writing_v1, image_generation_v2 */
+function isStepCompleted(stepKey: string, stepsCompleted: string[]): boolean {
+  if (!stepsCompleted.length) return false;
+  if (stepKey === "vision_analysis" || stepKey === "caption_writing") {
+    return stepsCompleted.includes(stepKey);
+  }
+  return stepsCompleted.some((s) => s === stepKey || s.startsWith(`${stepKey}_`));
+}
 
 interface JobTrackerProps {
   jobId: string;
@@ -37,6 +54,7 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [stepLabels, setStepLabels] = useState(STEP_LABELS_VI);
   const { toast } = useToast();
 
   const handleStop = async () => {
@@ -85,6 +103,8 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
       try {
         const status = await api.getJobStatus(jobId);
         setJobStatus(status);
+        const lang = (status as { content_language?: string }).content_language;
+        setStepLabels(lang?.toLowerCase().startsWith("en") ? STEP_LABELS_EN : STEP_LABELS_VI);
         setError(null);
         if (status.status === "completed" || status.status === "failed" || status.status === "cancelled") {
           clearInterval(pollInterval);
@@ -114,11 +134,12 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
     );
   }
 
-  const stepsCompleted = Array.isArray(jobStatus.steps_completed)
-    ? jobStatus.steps_completed.length
-    : 0;
-
   const isActive = jobStatus.status === "queued" || jobStatus.status === "processing";
+  const isTerminal =
+    jobStatus.status === "completed" ||
+    jobStatus.status === "failed" ||
+    jobStatus.status === "cancelled";
+  const stepsDone = jobStatus.steps_completed ?? [];
 
   return (
     <Card>
@@ -174,19 +195,40 @@ export function JobTracker({ jobId, onComplete }: JobTrackerProps) {
           <Progress value={jobStatus.progress} />
         </div>
 
-        {/* Current Step */}
-        {jobStatus.current_step && (
+        {/* Current Step — spinner only while job is still running */}
+        {jobStatus.current_step && isActive && (
           <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
             <Loader2 className="h-3 w-3 animate-spin" />
             <span>{jobStatus.current_step}</span>
           </div>
         )}
+        {jobStatus.current_step && isTerminal && (
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            {jobStatus.current_step}
+          </p>
+        )}
 
         {/* Steps */}
         <div className="space-y-3">
-          {Object.entries(STEP_LABELS).map(([key, label]) => {
-            const completed = (jobStatus.steps_completed ?? []).includes(key);
-            const isCurrent = jobStatus.current_step === label;
+          {Object.entries(stepLabels).map(([key, label]) => {
+            const completed = isStepCompleted(key, stepsDone);
+            const isCurrent =
+              isActive &&
+              !completed &&
+              (key === "vision_analysis"
+                ? jobStatus.current_step?.toLowerCase().includes("analyz")
+                : key === "prompt_writing"
+                ? jobStatus.current_step?.toLowerCase().includes("prompt")
+                : key === "image_generation"
+                ? jobStatus.current_step?.toLowerCase().includes("image")
+                : key === "video_generation"
+                ? jobStatus.current_step?.toLowerCase().includes("video")
+                : key === "caption_writing"
+                ? jobStatus.current_step?.toLowerCase().includes("caption")
+                : key === "bgm_mux"
+                ? jobStatus.current_step?.toLowerCase().includes("music")
+                  || jobStatus.current_step?.toLowerCase().includes("nhạc")
+                : false);
 
             return (
               <div

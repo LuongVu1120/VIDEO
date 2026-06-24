@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Check, Copy, Download, Edit2, RefreshCw,
-  Scissors, Video, X, Wand2, AlertCircle,
+  Scissors, Video, X, Wand2, AlertCircle, Camera, Clapperboard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api } from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
+import { useToast } from "@/components/ui/use-toast";
 
 const BACKEND_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1").replace(/\/api\/v1$/, "");
 
@@ -20,6 +21,23 @@ function toDisplayUrl(url: string): string {
   if (!url) return url;
   if (url.startsWith("http")) return url;
   return `${BACKEND_BASE}${url}`;
+}
+
+/** Posted caption: fewer than 20 words (max 19). */
+const MAX_CAPTION_WORDS = 19;
+const MIN_HASHTAGS = 10;
+const MAX_HASHTAGS = 15;
+
+function countWords(text: string): number {
+  const t = text.trim();
+  if (!t) return 0;
+  return t.split(/\s+/).length;
+}
+
+function limitWords(text: string, maxWords: number = MAX_CAPTION_WORDS): string {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return text.trim();
+  return words.slice(0, maxWords).join(" ");
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -41,7 +59,11 @@ interface OutputData {
   style_analysis: Record<string, unknown>;
   prompts: Record<string, unknown>[];
   images: string[];
+  videos: string[];
   video_url: string | null;
+  video_requested: boolean;
+  video_duration: number;
+  video_error: string | null;
   captions: Record<string, PlatformCaption>;
   cost_usd: number;
   created_at: string;
@@ -92,6 +114,8 @@ export function OutputGallery({ jobId }: { jobId: string }) {
   const [captionEdit, setCaptionEdit] = useState<CaptionEditState | null>(null);
   const [imageRegen, setImageRegen] = useState<ImageRegenState | null>(null);
   const [trim, setTrim] = useState<TrimState | null>(null);
+  const [publishing, setPublishing] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => { loadOutput(); }, [jobId]);
 
@@ -132,13 +156,15 @@ export function OutputGallery({ jobId }: { jobId: string }) {
 
   async function saveCaption() {
     if (!captionEdit || !output) return;
+    const caption = limitWords(captionEdit.caption);
+    const callToAction = limitWords(captionEdit.call_to_action);
     setCaptionEdit((s) => s && { ...s, saving: true, error: null });
     try {
       await api.updateCaption(jobId, captionEdit.platform, {
         title: captionEdit.title,
-        caption: captionEdit.caption,
+        caption,
         hashtags: captionEdit.hashtags.split(",").map((h) => h.trim()).filter(Boolean),
-        call_to_action: captionEdit.call_to_action,
+        call_to_action: callToAction,
       });
       // Update local state
       setOutput((prev) => {
@@ -148,9 +174,9 @@ export function OutputGallery({ jobId }: { jobId: string }) {
           ...newCaptions[captionEdit.platform],
           en: {
             title: captionEdit.title,
-            caption: captionEdit.caption,
+            caption,
             hashtags: captionEdit.hashtags.split(",").map((h) => h.trim()).filter(Boolean),
-            call_to_action: captionEdit.call_to_action,
+            call_to_action: callToAction,
           },
         };
         return { ...prev, captions: newCaptions };
@@ -158,6 +184,28 @@ export function OutputGallery({ jobId }: { jobId: string }) {
       setCaptionEdit(null);
     } catch (e) {
       setCaptionEdit((s) => s && { ...s, saving: false, error: (e as Error).message });
+    }
+  }
+
+  async function publishToPlatform(platform: "instagram" | "youtube") {
+    setPublishing(platform);
+    try {
+      const res = await api.publishToSocial(jobId, platform);
+      toast({
+        title: platform === "instagram" ? "Đã đăng Instagram" : "Đã đăng YouTube",
+        description: res.post_url
+          ? `Link: ${res.post_url}`
+          : "Đăng bài thành công.",
+        variant: "success",
+      });
+    } catch (e) {
+      toast({
+        title: "Đăng thất bại",
+        description: e instanceof Error ? e.message : "Kiểm tra token Instagram/YouTube trong .env",
+        variant: "destructive",
+      });
+    } finally {
+      setPublishing(null);
     }
   }
 
@@ -262,6 +310,20 @@ export function OutputGallery({ jobId }: { jobId: string }) {
           Created on {formatDate(output.created_at)} · ${output.cost_usd.toFixed(3)} total cost
         </p>
       </div>
+
+      {output.video_requested && !output.video_url && (
+        <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+          <CardContent className="flex gap-3 p-4 text-sm text-amber-800 dark:text-amber-300">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <div className="space-y-1">
+              <p className="font-medium">Video was requested, but no video URL was returned.</p>
+              <p className="whitespace-pre-wrap text-xs">
+                {output.video_error || "The video provider did not return a usable video. Check backend logs for the provider error."}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="images" className="space-y-6">
         <TabsList>
@@ -385,7 +447,7 @@ export function OutputGallery({ jobId }: { jobId: string }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => output.video_url && window.open(output.video_url, "_blank")}
+                      onClick={() => output.video_url && window.open(toDisplayUrl(output.video_url), "_blank")}
                     >
                       <Download className="h-4 w-4 mr-2" /> Download
                     </Button>
@@ -505,23 +567,43 @@ export function OutputGallery({ jobId }: { jobId: string }) {
                         </div>
 
                         <div>
-                          <label className="text-xs text-neutral-500 mb-1 block">Caption (English — will be posted)</label>
+                          <label className="text-xs text-neutral-500 mb-1 flex items-center justify-between">
+                            <span>Caption (English — will be posted)</span>
+                            <span
+                              className={cn(
+                                countWords(captionEdit.caption) >= MAX_CAPTION_WORDS
+                                  ? "text-amber-600 dark:text-amber-400"
+                                  : "text-neutral-400"
+                              )}
+                            >
+                              {countWords(captionEdit.caption)}/{MAX_CAPTION_WORDS} từ
+                            </span>
+                          </label>
                           <textarea
-                            rows={6}
+                            rows={4}
                             value={captionEdit.caption}
-                            onChange={(e) => setCaptionEdit((s) => s && { ...s, caption: e.target.value })}
+                            onChange={(e) =>
+                              setCaptionEdit(
+                                (s) => s && { ...s, caption: limitWords(e.target.value) }
+                              )
+                            }
                             className="w-full resize-none rounded-md border px-3 py-2 text-sm bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-blue-400"
                           />
+                          <p className="text-xs text-neutral-400 mt-1">
+                            Tối đa dưới 20 từ khi đăng (hashtag tách riêng).
+                          </p>
                         </div>
 
                         <div>
-                          <label className="text-xs text-neutral-500 mb-1 block">Hashtags (comma separated)</label>
+                          <label className="text-xs text-neutral-500 mb-1 block">
+                            Hashtags (phân tách bằng dấu phẩy, gợi ý {MIN_HASHTAGS}–{MAX_HASHTAGS})
+                          </label>
                           <input
                             type="text"
                             value={captionEdit.hashtags}
                             onChange={(e) => setCaptionEdit((s) => s && { ...s, hashtags: e.target.value })}
                             className="w-full rounded-md border px-3 py-2 text-sm bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-blue-400"
-                            placeholder="#MinimalistDesign, #ArchitecturePhotography, ..."
+                            placeholder="#KienTruc, #NoiThat, #MinimalistDesign, #ArchitecturePhotography, ..."
                           />
                         </div>
 
@@ -530,7 +612,11 @@ export function OutputGallery({ jobId }: { jobId: string }) {
                           <input
                             type="text"
                             value={captionEdit.call_to_action}
-                            onChange={(e) => setCaptionEdit((s) => s && { ...s, call_to_action: e.target.value })}
+                            onChange={(e) =>
+                              setCaptionEdit(
+                                (s) => s && { ...s, call_to_action: limitWords(e.target.value) }
+                              )
+                            }
                             className="w-full rounded-md border px-3 py-2 text-sm bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 focus:outline-none focus:border-blue-400"
                             placeholder="Follow us for more..."
                           />
@@ -617,6 +703,12 @@ export function OutputGallery({ jobId }: { jobId: string }) {
                         )}
 
                         {/* Hashtags */}
+                        <p className="text-xs text-neutral-400">
+                          {(en.hashtags ?? []).length} hashtag
+                          {(en.hashtags ?? []).length < MIN_HASHTAGS
+                            ? ` — gợi ý ${MIN_HASHTAGS}–${MAX_HASHTAGS} (bấm Edit hoặc Regenerate)`
+                            : ""}
+                        </p>
                         <div className="flex flex-wrap gap-1">
                           {(en.hashtags ?? []).map((tag, i) => (
                             <span
@@ -630,19 +722,58 @@ export function OutputGallery({ jobId }: { jobId: string }) {
                           ))}
                         </div>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            copy(`${en.caption}\n\n${(en.hashtags ?? []).join(" ")}`, `full-${platform}`)
-                          }
-                        >
-                          {copiedKey === `full-${platform}` ? (
-                            <><Check className="h-4 w-4 mr-2 text-green-500" /> Copied!</>
-                          ) : (
-                            <><Copy className="h-4 w-4 mr-2" /> Copy All</>
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              copy(`${en.caption}\n\n${(en.hashtags ?? []).join(" ")}`, `full-${platform}`)
+                            }
+                          >
+                            {copiedKey === `full-${platform}` ? (
+                              <><Check className="h-4 w-4 mr-2 text-green-500" /> Đã copy!</>
+                            ) : (
+                              <><Copy className="h-4 w-4 mr-2" /> Copy All</>
+                            )}
+                          </Button>
+
+                          {platform === "instagram" && (
+                            <Button
+                              size="sm"
+                              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
+                              disabled={publishing !== null}
+                              onClick={() => publishToPlatform("instagram")}
+                            >
+                              {publishing === "instagram" ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
+                              ) : (
+                                <Camera className="h-4 w-4 mr-2" />
+                              )}
+                              Đăng Instagram
+                            </Button>
                           )}
-                        </Button>
+
+                          {platform === "youtube" && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              disabled={publishing !== null || !output.video_url}
+                              title={
+                                output.video_url
+                                  ? "Upload video lên YouTube"
+                                  : "Cần có video trong tab Video"
+                              }
+                              onClick={() => publishToPlatform("youtube")}
+                            >
+                              {publishing === "youtube" ? (
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
+                              ) : (
+                                <Clapperboard className="h-4 w-4 mr-2" />
+                              )}
+                              Đăng YouTube
+                            </Button>
+                          )}
+                        </div>
                       </>
                     )}
                   </CardContent>

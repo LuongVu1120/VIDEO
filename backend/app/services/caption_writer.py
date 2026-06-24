@@ -8,14 +8,30 @@ import re
 from typing import Callable, Optional
 from openai import OpenAI
 from ..core.config import settings
+from .caption_utils import (
+    CAPTION_MAX_HASHTAGS,
+    CAPTION_MIN_HASHTAGS,
+    MAX_POST_CAPTION_WORDS,
+    clamp_caption_fields,
+)
 
+
+_CAPTION_WORD_RULE = (
+    f"caption body MUST be fewer than 20 words (maximum {MAX_POST_CAPTION_WORDS} words), "
+    "short and punchy; call_to_action if any must also stay under 20 words"
+)
+
+_HASHTAG_RULE = (
+    f"include exactly {CAPTION_MIN_HASHTAGS} to {CAPTION_MAX_HASHTAGS} relevant hashtags "
+    "(architecture, interior, design, location/style); each with # prefix"
+)
 
 PLATFORM_CONFIGS = {
-    "instagram": "engaging, aesthetic, 150-200 words, 20-25 hashtags",
-    "tiktok": "trendy, hook in first line, 80-100 words, 5-10 hashtags",
-    "youtube": "descriptive, SEO-friendly title + description, 3-5 hashtags",
-    "facebook": "warm, community-focused, 100-150 words, 10-15 hashtags",
-    "zalo": "friendly, professional, 80-120 words, no hashtags needed",
+    "instagram": f"engaging, aesthetic, {_CAPTION_WORD_RULE}, {_HASHTAG_RULE}",
+    "tiktok": f"trendy, hook in first line, {_CAPTION_WORD_RULE}, {_HASHTAG_RULE}",
+    "youtube": f"SEO-friendly title (short), {_CAPTION_WORD_RULE}, {_HASHTAG_RULE}",
+    "facebook": f"warm, community-focused, {_CAPTION_WORD_RULE}, {_HASHTAG_RULE}",
+    "zalo": f"friendly, professional, {_CAPTION_WORD_RULE}, no hashtags needed",
 }
 
 
@@ -46,6 +62,25 @@ class CaptionWriter:
             "Apply this while keeping the caption professional and architecture-focused."
         ) if extra_instruction.strip() else ""
 
+        post_lang = (settings.CAPTION_POST_LANGUAGE or "vi").lower()
+        if post_lang.startswith("vi"):
+            post_note = (
+                "- 'vi' is the REAL caption posted to social media — write natural, professional Vietnamese.\n"
+                "- 'en' is an English translation for reference; keep the same meaning.\n"
+            )
+        else:
+            post_note = (
+                "- 'en' is the REAL caption posted to social media — write professional English.\n"
+                "- 'vi' is a Vietnamese translation for the user to read.\n"
+            )
+
+        vi_mode = (settings.CONTENT_LANGUAGE or "vi").lower().startswith("vi")
+        vi_note = (
+            "The user works in Vietnamese. Hashtags may mix Vietnamese and English.\n"
+            if vi_mode
+            else ""
+        )
+
         return [{
             "role": "user",
             "content": (
@@ -54,9 +89,10 @@ class CaptionWriter:
                 f"Requirements: {config}"
                 f"{instruction_block}\n\n"
                 "IMPORTANT:\n"
-                "- 'en' is the REAL caption that will be posted to social media. Write it professionally in English.\n"
-                "- 'vi' is a Vietnamese TRANSLATION of the English caption, shown only so the user understands what will be posted. "
-                "It must faithfully reflect the English version — do NOT create different content.\n\n"
+                f"- Each 'caption' field must be under 20 words (max {MAX_POST_CAPTION_WORDS} words).\n"
+                f"- Each 'hashtags' array must have {CAPTION_MIN_HASHTAGS}-{CAPTION_MAX_HASHTAGS} items.\n"
+                f"{vi_note}"
+                f"{post_note}\n"
                 "Return JSON with this exact structure:\n"
                 "{\n"
                 '  "en": {"title": "...", "caption": "...", "hashtags": ["#...", "..."], "call_to_action": "..."},\n'
@@ -161,12 +197,13 @@ class CaptionWriter:
     # ------------------------------------------------------------------
 
     def _ensure_caption_fields(self, data: dict) -> dict:
-        return {
+        fields = {
             "title": data.get("title", ""),
             "caption": data.get("caption", ""),
             "hashtags": data.get("hashtags", []),
             "call_to_action": data.get("call_to_action", ""),
         }
+        return clamp_caption_fields(fields)
 
     def _empty_caption(self) -> dict:
         return {"title": "", "caption": "", "hashtags": [], "call_to_action": ""}

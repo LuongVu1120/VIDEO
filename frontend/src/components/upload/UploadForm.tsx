@@ -39,9 +39,10 @@ const EXAMPLE_HINTS = [
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [numImages, setNumImages] = useState(2);
+  const [numImages, setNumImages] = useState<number>(2);
   const [generateVideo, setGenerateVideo] = useState(true);
   const [videoDuration, setVideoDuration] = useState(5);
+  const [maxVideoVariations, setMaxVideoVariations] = useState(1);
   const [platforms, setPlatforms] = useState<string[]>(["instagram"]);
   const [autoPost, setAutoPost] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -98,11 +99,21 @@ export function UploadForm() {
       return;
     }
 
+    if (numImages === 0 && !generateVideo) {
+      toast({
+        title: "Thiếu tùy chọn",
+        description: "Chọn ít nhất một: tạo ảnh (2/4/6) hoặc bật Generate Cinematic Video.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.append("image", file);
     formData.append("num_images", numImages.toString());
     formData.append("generate_video", generateVideo.toString());
     formData.append("video_duration", videoDuration.toString());
+    formData.append("max_video_variations", maxVideoVariations.toString());
     formData.append("platforms", platforms.join(","));
     formData.append("auto_post", autoPost.toString());
     formData.append("user_description", userDescription.trim());
@@ -111,7 +122,7 @@ export function UploadForm() {
       const jobId = await uploadImage(formData);
       toast({
         title: "Job Created",
-        description: "Your architecture video generation has started!",
+        description: "Your architecture content generation has started!",
         variant: "success",
       });
       router.push(`/dashboard/jobs/${jobId}`);
@@ -279,19 +290,31 @@ export function UploadForm() {
         <CardContent className="space-y-6">
           {/* Number of Images */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="h-5 w-5 text-neutral-500" />
-              <Label>Number of Images</Label>
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <ImageIcon className="h-5 w-5 text-neutral-500" />
+                <Label>Number of Images</Label>
+              </div>
+              <p className="text-xs text-neutral-500">
+                Chọn &quot;Không&quot; để chỉ dùng ảnh upload (phù hợp khi chỉ tạo video)
+              </p>
             </div>
             <div className="flex items-center gap-2">
-              {[2, 4, 6].map((n) => (
+              {(
+                [
+                  { value: 0, label: "Không" },
+                  { value: 2, label: "2" },
+                  { value: 4, label: "4" },
+                  { value: 6, label: "6" },
+                ] as const
+              ).map(({ value, label }) => (
                 <Button
-                  key={n}
-                  variant={numImages === n ? "default" : "outline"}
+                  key={value}
+                  variant={numImages === value ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setNumImages(n)}
+                  onClick={() => setNumImages(value)}
                 >
-                  {n}
+                  {label}
                 </Button>
               ))}
             </div>
@@ -313,10 +336,33 @@ export function UploadForm() {
           </div>
 
           {generateVideo && (
+            <>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Số video tạo</Label>
+                <p className="text-xs text-neutral-500">
+                  Mỗi variation = 1 lần gọi fal. Chọn 1 để giảm ~50% phí video.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {([1, 2] as const).map((n) => (
+                  <Button
+                    key={n}
+                    variant={maxVideoVariations === n ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setMaxVideoVariations(n)}
+                  >
+                    {n}
+                  </Button>
+                ))}
+              </div>
+            </div>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Video Duration</Label>
-                <p className="text-xs text-neutral-500">3-15 seconds. Longer videos cost more credits</p>
+                <p className="text-xs text-neutral-500">
+                  3-15s (O3) hoặc 5/10s (Kling 2.5 Turbo). Mặc định model rẻ ~$0.21/video 5s
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <Input
@@ -330,6 +376,12 @@ export function UploadForm() {
                 <span className="text-sm text-neutral-500">seconds</span>
               </div>
             </div>
+            <p className="text-xs text-neutral-500 rounded-md bg-neutral-50 dark:bg-neutral-900 px-3 py-2 border border-neutral-200 dark:border-neutral-800">
+              Ước tính video fal: ~
+              {(maxVideoVariations === 1 ? 0.21 : 0.42).toFixed(2)}$
+              {" "}(1×5s Turbo) — trước đây 2×O3 5s ≈ $0.84/job.
+            </p>
+            </>
           )}
 
           {/* Platforms */}

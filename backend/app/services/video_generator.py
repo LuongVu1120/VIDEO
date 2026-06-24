@@ -6,43 +6,125 @@ import os
 import requests
 from pathlib import Path
 from ..core.config import settings
+from .video_cost import clamp_duration_for_model
 
 _BACKEND_DIR = Path(__file__).parent.parent.parent  # VIDEO/backend/
 
+# Kling image-to-video: vague prompts often become simple 2D pan/zoom on the still frame.
+KLING_DEFAULT_NEGATIVE = (
+    "simple 2D image pan, sliding still photo, ken burns only, floating static image, "
+    "jitter, choppy motion, warped perspective, blur, low quality, distorted architecture"
+)
+
+
+def compose_kling_video_prompt(video_prompt: str, user_description: str = "") -> str:
+    """Merge AI video prompt with user creative direction for fal/Kling."""
+    parts: list[str] = []
+    if user_description.strip():
+        parts.append(
+            "CREATIVE DIRECTION (highest priority — follow exactly; may be Vietnamese): "
+            f"{user_description.strip()}"
+        )
+    if video_prompt and video_prompt.strip():
+        parts.append(video_prompt.strip())
+    else:
+        parts.append(
+            "Cinematic architectural video with motivated camera movement "
+            "(slow dolly push-in or smooth orbit around the building), "
+            "realistic parallax and depth, stable structure, natural lighting."
+        )
+    parts.append(
+        "Camera work must be three-dimensional cinematic motion, not a flat photo sliding "
+        "up/down/left/right. No simple Ken Burns pan on a still image."
+    )
+    return " ".join(parts)
+
 
 class VideoGenerator:
-    def generate(self, image_url_or_path: str, prompt: str, duration_seconds: int | None = None) -> str:
+    def generate(
+        self,
+        image_url_or_path: str,
+        prompt: str,
+        duration_seconds: int | None = None,
+        *,
+        user_description: str = "",
+        negative_prompt: str = "",
+    ) -> str:
         """Generate video using fal.ai, Google Veo 3.1, or Runway.
-        Returns a mock placeholder if no video API is configured."""
-        if settings.FAL_KEY:
-            try:
-                return self._generate_fal(image_url_or_path, prompt, duration_seconds)
-            except Exception as e:
-                print(f"fal.ai video generation failed: {e}")
+        Raises an exception if no provider returns a real video URL."""
+        errors = []
+        provider = (settings.VIDEO_PROVIDER or "fal").lower().strip()
+        allow_fallback = provider == "auto"
 
-        # Try Google Veo 3.1 (best quality)
-        if settings.GOOGLE_API_KEY:
+        if provider in ("fal", "auto"):
+            if not settings.FAL_KEY:
+                if provider == "fal":
+                    raise RuntimeError("Video generation skipped: FAL_KEY is not configured")
+            else:
+                try:
+                    return self._generate_fal(
+                        image_url_or_path,
+                        prompt,
+                        duration_seconds,
+                        user_description=user_description,
+                        negative_prompt=negative_prompt,
+                    )
+                except Exception as e:
+                    errors.append(f"fal.ai: {e}")
+                    print(f"fal.ai video generation failed: {e}")
+                    if not allow_fallback:
+                        raise RuntimeError("Video generation failed: " + " | ".join(errors))
+
+        if provider in ("veo", "google"):
+            if not settings.GOOGLE_API_KEY:
+                raise RuntimeError("Video generation skipped: GOOGLE_API_KEY is not configured")
             try:
-                return self._generate_veo(image_url_or_path, prompt)
+                veo_prompt = compose_kling_video_prompt(prompt, user_description)
+                return self._generate_veo(image_url_or_path, veo_prompt)
             except Exception as e:
+                raise RuntimeError(f"Video generation failed: Google Veo 3.1: {e}") from e
+
+        if provider == "runway":
+            if not settings.RUNWAY_API_KEY:
+                raise RuntimeError("Video generation skipped: RUNWAY_API_KEY is not configured")
+            try:
+                runway_prompt = compose_kling_video_prompt(prompt, user_description)
+                return self._generate_runway(image_url_or_path, runway_prompt, duration_seconds)
+            except Exception as e:
+                raise RuntimeError(f"Video generation failed: Runway: {e}") from e
+
+        # Fallback chain only when VIDEO_PROVIDER=auto.
+        if allow_fallback and settings.GOOGLE_API_KEY:
+            try:
+                veo_prompt = compose_kling_video_prompt(prompt, user_description)
+                return self._generate_veo(image_url_or_path, veo_prompt)
+            except Exception as e:
+                errors.append(f"Google Veo 3.1: {e}")
                 print(f"Google Veo 3.1 failed: {e}")
 
-        # Fallback to Runway
-        if settings.RUNWAY_API_KEY:
+        if allow_fallback and settings.RUNWAY_API_KEY:
             try:
-                return self._generate_runway(image_url_or_path, prompt, duration_seconds)
+                runway_prompt = compose_kling_video_prompt(prompt, user_description)
+                return self._generate_runway(image_url_or_path, runway_prompt, duration_seconds)
             except Exception as e:
+                errors.append(f"Runway: {e}")
                 print(f"Runway fallback also failed: {e}")
 
-        # If no API key is configured or all failed, return a mock placeholder
-        # so the pipeline can complete end-to-end for testing
-        from datetime import datetime
-        print("No video API configured — returning mock video placeholder")
-        return f"mock_video_{datetime.now().strftime('%Y%m%d_%H%M%S')}.mp4"
+        if errors:
+            raise RuntimeError("Video generation failed: " + " | ".join(errors))
+        raise RuntimeError(f"Video generation skipped: unsupported VIDEO_PROVIDER='{provider}'")
 
     # ==================== fal.ai ====================
 
-    def _generate_fal(self, image_url_or_path: str, prompt: str, duration_seconds: int | None = None) -> str:
+    def _generate_fal(
+        self,
+        image_url_or_path: str,
+        prompt: str,
+        duration_seconds: int | None = None,
+        *,
+        user_description: str = "",
+        negative_prompt: str = "",
+    ) -> str:
         """Generate image-to-video through fal.ai."""
         if not settings.FAL_KEY:
             raise ValueError("FAL_KEY not configured")
@@ -57,10 +139,21 @@ class VideoGenerator:
         os.environ["FAL_KEY"] = settings.FAL_KEY
 
         endpoint = settings.FAL_VIDEO_MODEL
+        self._verify_fal_storage_auth()
         image_url = self._prepare_fal_image_url(image_url_or_path, fal_client)
-        arguments = self._build_fal_arguments(endpoint, image_url, prompt, duration_seconds)
+        final_prompt = compose_kling_video_prompt(prompt, user_description)
+        arguments = self._build_fal_arguments(
+            endpoint,
+            image_url,
+            final_prompt,
+            duration_seconds,
+            negative_prompt=negative_prompt,
+        )
 
         print(f"fal.ai video endpoint: {endpoint}")
+        print(f"fal.ai video prompt ({len(final_prompt)} chars): {final_prompt[:400]}...")
+        if user_description.strip():
+            print(f"fal.ai user creative direction applied: {user_description[:200]}")
         result = fal_client.subscribe(
             endpoint,
             arguments=arguments,
@@ -76,6 +169,26 @@ class VideoGenerator:
         print(f"fal.ai video generated: {video_url}")
         return video_url
 
+    def _verify_fal_storage_auth(self) -> None:
+        """Fail early with fal.ai's detailed auth error before uploading files."""
+        response = requests.post(
+            "https://rest.fal.ai/storage/auth/token?storage_type=fal-cdn-v3",
+            headers={
+                "Authorization": f"Key {settings.FAL_KEY}",
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            json={},
+            timeout=20,
+        )
+        if response.status_code >= 400:
+            detail = response.text
+            try:
+                detail = response.json().get("detail", detail)
+            except Exception:
+                pass
+            raise RuntimeError(f"fal.ai auth failed ({response.status_code}): {detail}")
+
     def _prepare_fal_image_url(self, image_url_or_path: str, fal_client) -> str:
         """Return a public image URL usable by fal video endpoints."""
         if image_url_or_path.startswith("http://") or image_url_or_path.startswith("https://"):
@@ -90,18 +203,33 @@ class VideoGenerator:
         image_url: str,
         prompt: str,
         duration_seconds: int | None = None,
+        *,
+        negative_prompt: str = "",
     ) -> dict:
         """Build endpoint-specific fal arguments."""
-        image_key = "start_image_url" if "/v3/" in endpoint else "image_url"
-        duration = duration_seconds if duration_seconds else settings.FAL_VIDEO_DURATION
+        image_key = (
+            "start_image_url"
+            if "/o3/" in endpoint or "/v3/" in endpoint
+            else "image_url"
+        )
+        raw_duration = duration_seconds if duration_seconds else int(settings.FAL_VIDEO_DURATION or 5)
+        duration = clamp_duration_for_model(raw_duration, endpoint)
         arguments = {
             image_key: image_url,
-            "prompt": prompt or "Cinematic architectural walkthrough, slow camera movement, realistic lighting.",
-            "duration": str(duration or "5"),
+            "prompt": prompt or compose_kling_video_prompt("", ""),
+            "duration": str(duration),
         }
 
         if settings.FAL_VIDEO_GENERATE_AUDIO:
             arguments["generate_audio"] = True
+
+        # Kling (O3 / turbo): stronger prompt adherence + block cheap pan-only motion
+        if "/kling-video/" in endpoint:
+            neg_parts = [KLING_DEFAULT_NEGATIVE]
+            if negative_prompt and negative_prompt.strip():
+                neg_parts.append(negative_prompt.strip())
+            arguments["negative_prompt"] = ", ".join(neg_parts)
+            arguments["cfg_scale"] = 0.65
 
         return arguments
 
@@ -243,6 +371,8 @@ class VideoGenerator:
             )
         if response.status_code == 429:
             raise Exception("Google Veo API: Rate limited. Try again later.")
+        if response.status_code == 400:
+            raise Exception(f"Google Veo API: Bad request - {response.text}")
 
         response.raise_for_status()
         return response.json()
@@ -260,7 +390,8 @@ class VideoGenerator:
             timeout=30
         )
 
-        response.raise_for_status()
+        if response.status_code >= 400:
+            raise Exception(f"Google Veo operation status failed ({response.status_code}): {response.text}")
         return response.json()
 
     def _download_veo_video(self, api_key: str, video_name: str) -> str:

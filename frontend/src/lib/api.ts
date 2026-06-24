@@ -76,7 +76,11 @@ class ApiClient {
       style_analysis: Record<string, unknown>;
       prompts: Record<string, unknown>[];
       images: string[];
+      videos: string[];
       video_url: string | null;
+      video_requested: boolean;
+      video_duration: number;
+      video_error: string | null;
       captions: Record<string, {
         en: { title: string; caption: string; hashtags: string[]; call_to_action: string };
         vi: { title: string; caption: string; hashtags: string[]; call_to_action: string };
@@ -119,6 +123,19 @@ class ApiClient {
       `/outputs/${jobId}/regenerate-caption`,
       { method: "POST", body: JSON.stringify({ platform, extra_instruction: extraInstruction }) }
     );
+  }
+
+  async publishToSocial(jobId: string, platform: "instagram" | "youtube") {
+    return this.request<{
+      success: boolean;
+      platform: string;
+      status: string;
+      post_url: string | null;
+      result: Record<string, unknown>;
+    }>(`/outputs/${jobId}/publish`, {
+      method: "POST",
+      body: JSON.stringify({ platform }),
+    });
   }
 }
 

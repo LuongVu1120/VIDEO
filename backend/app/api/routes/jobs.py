@@ -5,6 +5,7 @@ from sqlalchemy import select
 from ...core.database import get_db
 from ...models.job import Job
 from ...workers.tasks import request_cancel
+from ...core.config import settings
 
 router = APIRouter()
 
@@ -34,6 +35,8 @@ async def get_job_status(
         "estimated_remaining_seconds": job.estimated_remaining_seconds,
         "error_message": job.error_message,
         "created_at": job.created_at.isoformat() if job.created_at else None,
+        "content_language": settings.CONTENT_LANGUAGE,
+        "caption_post_language": settings.CAPTION_POST_LANGUAGE,
     }
 
 

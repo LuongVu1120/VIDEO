@@ -243,12 +243,27 @@ CRITICAL: Generate 6-10 relevant style_tags based on the style analysis."""
         time_of_day = style_analysis.get("time_of_day", "golden hour")
         mood = style_analysis.get("mood", "peaceful")
 
+        vi_hint = (
+            "The client request may be in Vietnamese — interpret it fully before writing prompts.\n"
+            if (settings.CONTENT_LANGUAGE or "vi").lower().startswith("vi")
+            else ""
+        )
         direction_block = (
-            f"\n## USER CREATIVE DIRECTION\n"
-            f'The client specifically requested: "{user_description}"\n'
-            f"Ensure the image_prompt and video_prompt reflect this direction. "
-            f"This takes priority over default style assumptions.\n"
-        ) if user_description else ""
+            f"\n## USER CREATIVE DIRECTION (MANDATORY — overrides trained defaults)\n"
+            f'Client request: "{user_description}"\n'
+            f"{vi_hint}"
+            f"- image_prompt: reflect materials, lighting, mood from this request.\n"
+            f"- video_prompt: 80-120 words in English as a shot list for Kling image-to-video.\n"
+            f"  * Start with explicit camera movement matching the client request "
+            f"(e.g. slow dolly push-in, orbit, tracking, crane up, reveal) — use professional terms.\n"
+            f"  * Describe subject, action, environment, lighting, pacing.\n"
+            f"  * Do NOT default to generic vertical pan or 2D image slide unless the client asked for it.\n"
+            f"- negative_prompt: include motion to avoid if client wants cinematic depth.\n"
+        ) if user_description else (
+            "\n## VIDEO PROMPT\n"
+            "- video_prompt: 80-120 words, explicit 3D camera motion (dolly/orbit/tracking), "
+            "not a flat still image panning.\n"
+        )
 
         user_prompt = (
             f"You are generating prompts for a {style} house in a {environment} setting.\n\n"
@@ -256,7 +271,7 @@ CRITICAL: Generate 6-10 relevant style_tags based on the style analysis."""
             f"Mood: {mood} | Features: {features_str} | Camera: {camera_desc}\n"
             f"{video_context}"
             f"{direction_block}\n"
-            f"Generate image_prompt, video_prompt, negative_prompt, style_tags as JSON."
+            f"Return JSON: image_prompt, video_prompt, negative_prompt, style_tags."
         )
 
         stream = self.client.chat.completions.create(
@@ -280,7 +295,10 @@ CRITICAL: Generate 6-10 relevant style_tags based on the style analysis."""
         if self.use_deepseek:
             full_text = self._extract_json(full_text)
 
-        return self._postprocess(full_text, style, materials_str, lighting, camera_type, features_str)
+        return self._postprocess(
+            full_text, style, materials_str, lighting, camera_type, features_str,
+            user_description=user_description,
+        )
 
     def _postprocess(
         self,
@@ -290,6 +308,7 @@ CRITICAL: Generate 6-10 relevant style_tags based on the style analysis."""
         lighting: str,
         camera_type: str,
         features_str: str,
+        user_description: str = "",
     ) -> str:
         """Validate JSON and fill template fallbacks."""
         if self.use_deepseek:
@@ -302,13 +321,18 @@ CRITICAL: Generate 6-10 relevant style_tags based on the style analysis."""
                 )
             if not result.get("video_prompt") or len(result["video_prompt"]) < 30:
                 result["video_prompt"] = self._fill_video_template(
-                    style, features_str, lighting
+                    style, features_str, lighting, user_description
+                )
+            elif user_description.strip():
+                from .video_generator import compose_kling_video_prompt
+                result["video_prompt"] = compose_kling_video_prompt(
+                    result["video_prompt"], user_description
                 )
             return json.dumps(result, ensure_ascii=False)
         except (json.JSONDecodeError, TypeError):
             fallback = {
                 "image_prompt": self._fill_image_template(style, materials_str, lighting, camera_type),
-                "video_prompt": self._fill_video_template(style, features_str, lighting),
+                "video_prompt": self._fill_video_template(style, features_str, lighting, user_description),
                 "negative_prompt": (
                     "distorted, low quality, blurry, unnatural colors, oversaturated, "
                     "warped perspective, cartoonish, 3d render look, CGI, bad proportions, "
@@ -340,16 +364,18 @@ CRITICAL: Generate 6-10 relevant style_tags based on the style analysis."""
             f"overly perfect surfaces, 3d render look, cartoon, artificial lighting"
         )
 
-    def _fill_video_template(self, style: str, features: str, lighting: str) -> str:
+    def _fill_video_template(
+        self, style: str, features: str, lighting: str, user_description: str = ""
+    ) -> str:
         """Fill the standard video prompt template."""
-        return (
-            f"A cinematic slow orbit around a {style} house, "
-            f"showcasing {features} with {lighting} casting natural shadows, "
-            f"peaceful atmosphere, smooth camera movement, "
-            f"realistic architectural video, cinematic 24fps, "
-            f"professional grade footage, 4k ultra HD, no distortion, "
-            f"realistic materials, natural lighting behavior."
+        from .video_generator import compose_kling_video_prompt
+        base = (
+            f"Slow motivated dolly push-in toward a {style} house facade, "
+            f"showcasing {features}, {lighting} with natural shadows, "
+            f"smooth gimbal-stabilized 24fps cinematic motion, realistic depth and parallax, "
+            f"4k architectural footage, stable geometry."
         )
+        return compose_kling_video_prompt(base, user_description)
 
     def _extract_json(self, text: str) -> str:
         """Extract JSON from text that may contain markdown code blocks."""
