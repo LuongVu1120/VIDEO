@@ -28,11 +28,17 @@ OUTPUT_DIR = _BACKEND_DIR / "output" / "images"
 
 class ImageGenerator:
     def generate_images(self, prompt: str, negative: str = "", n: int = 4) -> list:
-        """Generate images using gpt-image-1 (primary) or SDXL (fallback)."""
-        images = self._generate_gpt_image(prompt, n)
-        if images:
-            return images
-        return self._generate_sdxl(prompt, negative, n)
+        """Generate images — provider theo settings (sdxl_first tiết kiệm hơn OpenAI)."""
+        provider = (settings.IMAGE_PROVIDER or "openai").lower().strip()
+
+        if provider in ("sdxl", "sdxl_first") and settings.REPLICATE_API_TOKEN:
+            images = self._generate_sdxl(prompt, negative, n)
+            if images:
+                return images
+            if provider == "sdxl":
+                return []
+
+        return self._generate_gpt_image(prompt, n)
 
     def _generate_gpt_image(self, prompt: str, n: int = 4) -> list:
         """gpt-image-1 generation — saves to backend/output/images/, returns URL paths."""
@@ -50,7 +56,7 @@ class ImageGenerator:
                             model="gpt-image-1",
                             prompt=prompt,
                             size=PORTRAIT_SIZE,
-                            quality="medium",
+                            quality=settings.IMAGE_OPENAI_QUALITY,
                             n=1
                         )
                         break

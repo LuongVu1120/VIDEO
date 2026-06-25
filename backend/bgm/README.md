@@ -1,6 +1,21 @@
 # Thư viện nhạc nền (BGM)
 
-Pipeline tự ghép nhạc vào video sau khi fal/Kling tạo xong (cần **FFmpeg**).
+Pipeline **tự chọn nhạc theo phong cách mỗi video** sau khi fal/Kling tạo xong (cần **FFmpeg**).
+
+## Cách chọn nhạc
+
+Hệ thống phân tích `style`, `mood`, `lighting`, `environment` của từng variation và chọn mood BGM:
+
+| Mood folder | Phù hợp với |
+|-------------|-------------|
+| `peaceful/` | Tropical, coastal, organic, calm |
+| `luxurious/` | Neoclassical, elegant, luxury |
+| `dramatic/` | Industrial, brutalist, cinematic |
+| `cozy/` | Mediterranean, rustic, warm |
+| `futuristic/` | Modern, contemporary, urban tech |
+| `serene/` | Minimalist, Scandinavian, zen |
+
+Mỗi video variation nhận **track khác** (xoay vòng trong thư mục mood, không trùng trong cùng job).
 
 ## Cấu trúc thư mục
 
@@ -8,27 +23,34 @@ Pipeline tự ghép nhạc vào video sau khi fal/Kling tạo xong (cần **FFmp
 
 ```
 bgm/
-  peaceful/     ← calm, serene
-  luxurious/    ← premium, elegant
-  dramatic/     ← epic, cinematic
-  cozy/         ← warm, homely
-  futuristic/   ← modern, tech
-  serene/       ← minimal, zen
+  peaceful/
+  luxurious/
+  dramatic/
+  cozy/
+  futuristic/
+  serene/
 ```
 
-Hệ thống chọn **file đầu tiên** trong thư mục khớp `mood` của job (từ phân tích kiến trúc).
+Nên có **ít nhất 2 file** mỗi mood để các variation không dùng cùng một track.
 
-## Nếu chưa có file nhạc
+## Thiết lập thư viện demo (dev)
 
-Lần chạy đầu có thể tạo `peaceful/_fallback_ambient.mp3` (tiếng ồn rất nhẹ) để demo.  
-Để có nhạc thật: tải nhạc miễn phí bản quyền (Uppbeat, Pixabay Music, YouTube Audio Library…) và copy vào các thư mục trên.
+```bash
+brew install ffmpeg   # macOS
+cd backend
+.venv/bin/python scripts/setup_bgm_library.py
+```
+
+Script tạo ambient demo royalty-free cho mỗi mood nếu thư mục trống.
+
+Để có nhạc thật: tải từ Uppbeat, Pixabay Music, YouTube Audio Library… và copy vào các thư mục trên.
 
 ## Cấu hình `.env`
 
 ```env
 VIDEO_ADD_BGM=true
 BGM_VOLUME=0.22
-# BGM_LIBRARY_DIR=D:/Music/arch-bgm
+# BGM_LIBRARY_DIR=/path/to/custom/bgm
 ```
 
 Tắt nhạc nền: `VIDEO_ADD_BGM=false`

@@ -3,7 +3,7 @@ import secrets
 import warnings
 from pathlib import Path
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from typing import Optional
 
 
@@ -51,6 +51,12 @@ class Settings(BaseSettings):
 
     # AI - Image Generation
     REPLICATE_API_TOKEN: Optional[str] = None
+    # openai | sdxl | sdxl_first (sdxl_first = thử SDXL trước, rẻ hơn gpt-image-1)
+    IMAGE_PROVIDER: str = "openai"
+    IMAGE_OPENAI_QUALITY: str = "low"  # low | medium | high (low rẻ hơn ~40%)
+
+    # Tiết kiệm chi phí toàn pipeline
+    COST_SAVE_MODE: bool = False
 
     # AI - Video Generation
     VIDEO_PROVIDER: str = "fal"  # fal | veo | runway | auto
@@ -110,6 +116,26 @@ class Settings(BaseSettings):
             if normalized in {"dev", "development"}:
                 return True
         return value
+
+    @field_validator("IMAGE_OPENAI_QUALITY", mode="before")
+    @classmethod
+    def normalize_image_quality(cls, value):
+        if isinstance(value, str):
+            q = value.strip().lower()
+            if q in {"low", "medium", "high"}:
+                return q
+        return value
+
+    @model_validator(mode="after")
+    def apply_cost_save_defaults(self):
+        if self.COST_SAVE_MODE:
+            if self.IMAGE_PROVIDER == "openai":
+                self.IMAGE_PROVIDER = "sdxl_first"
+            if self.VIDEO_MAX_VARIATIONS > 1:
+                self.VIDEO_MAX_VARIATIONS = 1
+            if self.IMAGE_OPENAI_QUALITY == "medium":
+                self.IMAGE_OPENAI_QUALITY = "low"
+        return self
 
     class Config:
         env_file = _find_env()

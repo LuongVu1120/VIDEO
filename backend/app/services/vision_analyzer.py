@@ -130,8 +130,9 @@ was adjusted.
         features = ", ".join(style_analysis.get("key_features", ["large windows"])[:5])
         environment = style_analysis.get("environment", "natural")
 
+        count = 1 if settings.COST_SAVE_MODE else 2
         prompt = f"""You are an expert architect and AI art director. Based on a reference building analysis,
-        generate 2 CREATIVE VARIATIONS of the architectural design.
+        generate {count} CREATIVE VARIATION(S) of the architectural design.
 
         REFERENCE STYLE: {style}
         REFERENCE MATERIALS: {materials}
@@ -159,7 +160,7 @@ was adjusted.
         - environment: environment setting
         - rationale: 1 sentence explaining how this differs from the original
 
-        Return exactly 2 variations. Return JSON: {{"variations": [...]}}
+        Return exactly {count} variation(s). Return JSON: {{"variations": [...]}}
         """
 
         response = client.chat.completions.create(

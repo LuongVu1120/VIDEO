@@ -39,6 +39,21 @@ class ApiClient {
     });
   }
 
+  async getDefaultVideoDirections() {
+    return this.request<{
+      message: string;
+      directions: Array<{
+        key: string;
+        label_vi: string;
+        prompt_vi: string;
+      }>;
+      preview: {
+        variation_1: { key: string; label_vi: string; prompt_vi: string };
+        variation_2: { key: string; label_vi: string; prompt_vi: string };
+      };
+    }>("/jobs/default-directions");
+  }
+
   async getJobStatus(jobId: string) {
     return this.request<{
       job_id: string;

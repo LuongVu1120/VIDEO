@@ -57,11 +57,12 @@ from ..services.prompt_writer import PromptWriter
 from ..services.image_generator import ImageGenerator
 from ..services.video_generator import VideoGenerator
 from ..services.caption_writer import CaptionWriter
-from ..services.music_suggester import MusicSuggester
+from ..services.music_suggester import MusicSuggester, MUSIC_MOOD_MAP
 from ..services.social_poster import SocialPoster
 from ..services.watermark_service import apply_branding_to_job
 from ..services.video_cost import estimate_fal_video_usd, clamp_duration_for_model
-from ..services.bgm_service import apply_bgm_to_video
+from ..services.bgm_service import apply_bgm_to_video, infer_bgm_mood
+from ..services.default_video_directions import resolve_creative_direction
 
 
 def _get_sync_db_url() -> str:
@@ -212,9 +213,13 @@ def process_job_sync(job_id: str, image_path: str, options: dict):
 
 def _estimate_job_cost_usd(options: dict, all_results: list) -> float:
     """Rough USD estimate: vision/prompt/caption baseline + fal video + images."""
-    base = 0.12 * (len(all_results) or 1)
+    variation_count = len(all_results) or 1
+    base = 0.08 * variation_count if settings.COST_SAVE_MODE else 0.12 * variation_count
     num_images = sum(len(r.get("images") or []) for r in all_results)
-    image_cost = num_images * 0.04
+    image_unit = 0.02 if settings.IMAGE_PROVIDER.startswith("sdxl") else (
+        0.02 if settings.IMAGE_OPENAI_QUALITY == "low" else 0.04
+    )
+    image_cost = num_images * image_unit
     video_count = sum(1 for r in all_results if r.get("video_url"))
     if options.get("generate_video", True) and video_count:
         duration = clamp_duration_for_model(int(options.get("video_duration") or 5))
@@ -227,6 +232,13 @@ def _estimate_job_cost_usd(options: dict, all_results: list) -> float:
 def _run_pipeline(job_id: str, image_path: str, options: dict):
     """Core pipeline: 7 buoc chinh."""
     platforms = options.get("platforms", ["instagram", "facebook", "tiktok", "youtube"])
+    if settings.COST_SAVE_MODE:
+        # Caption 1 platform (instagram ưu tiên) — tiết kiệm ~75% API caption
+        if "instagram" in platforms:
+            platforms = ["instagram"]
+        else:
+            platforms = platforms[:1]
+
     user_description = options.get("user_description", "")
 
     # ==================== STEP 1: VISION ANALYSIS ====================
@@ -257,6 +269,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
     variations = analyzer._analyze_variation_workflow(image_base64, existing_analysis=style_data)
     all_results = []
     video_errors = []
+    used_bgm_paths: list[str] = []
 
     variation_list = variations.get("variations", [])
     num_variations = len(variation_list) or 1
@@ -282,6 +295,19 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
             "environment": variation_style.get("environment", style_data.get("environment", "natural")),
         }
 
+        # Creative direction: user input hoặc prompt mặc định sinh động (ngày/đêm, mùa, room-in/out...)
+        effective_desc, direction_meta = resolve_creative_direction(
+            user_description,
+            variation_index=idx,
+            style_analysis=blended_analysis,
+            job_seed=job_id,
+        )
+        if direction_meta.get("source") == "auto_default":
+            print(
+                f"[Creative] Auto direction v{idx+1}: {direction_meta.get('label_vi')} "
+                f"({direction_meta.get('key')})"
+            )
+
         # ==================== STEP 2: PROMPT WRITING (streaming) ====================
         variation_label = blended_analysis.get("variation_name", f"Variation {idx+1}")
         update_job_status(
@@ -293,7 +319,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
         prompt_writer = PromptWriter(use_deepseek=settings.USE_DEEPSEEK_FOR_PROMPTS)
         prompt_cb = _make_stream_callback(job_id, f"prompt_v{idx+1}")
         prompts_data = prompt_writer.generate_prompts_streaming(
-            blended_analysis, on_chunk=prompt_cb, user_description=user_description
+            blended_analysis, on_chunk=prompt_cb, user_description=effective_desc
         )
         prompt_cb.flush()
         prompts = json.loads(prompts_data) if isinstance(prompts_data, str) else prompts_data
@@ -351,7 +377,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
                     video_source,
                     prompts.get("video_prompt", ""),
                     duration_seconds=video_duration,
-                    user_description=user_description,
+                    user_description=effective_desc,
                     negative_prompt=prompts.get("negative_prompt", ""),
                 )
                 update_job_status(
@@ -389,24 +415,34 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
                 print(f"[Watermark] Skipped: {e}")
 
         # ==================== BACKGROUND MUSIC (FFmpeg) ====================
+        bgm_meta: dict | None = None
         if video_url:
             _check_cancel(job_id)
-            mood_for_bgm = blended_analysis.get("mood") or style_data.get("mood", "peaceful")
+            inferred = infer_bgm_mood(blended_analysis)
+            variation_label = blended_analysis.get("variation_name", f"Variation {idx+1}")
             update_job_status(
                 job_id, "processing", progress=25 + (idx * 15),
-                current_step=f"Adding background music for variation {idx+1}...",
+                current_step=f"Adding {inferred} background music for {variation_label}...",
                 step_name=f"bgm_mux_v{idx+1}",
             )
             try:
-                video_url = apply_bgm_to_video(
+                bgm_result = apply_bgm_to_video(
                     video_url,
-                    mood=str(mood_for_bgm),
+                    mood=str(blended_analysis.get("mood", "peaceful")),
                     job_id=f"{job_id}_v{idx+1}",
-                ) or video_url
+                    style_analysis=blended_analysis,
+                    variation_index=idx,
+                    used_tracks=used_bgm_paths,
+                )
+                if bgm_result:
+                    video_url = bgm_result["video_url"]
+                    bgm_meta = bgm_result
+                    used_bgm_paths.append(bgm_result["bgm_path"])
             except Exception as e:
                 print(f"[BGM] Skipped for variation {idx+1}: {e}")
 
         prompts_record = dict(prompts)
+        prompts_record["creative_direction"] = direction_meta
         if user_description:
             prompts_record["user_description"] = user_description
         all_results.append({
@@ -414,6 +450,7 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
             "prompts": prompts_record,
             "images": images,
             "video_url": video_url,
+            "bgm": bgm_meta,
         })
 
     # ==================== STEP 5: CAPTION WRITING ====================
@@ -446,8 +483,16 @@ def _run_pipeline(job_id: str, image_path: str, options: dict):
     music_suggestions = {}
     for platform in platforms:
         try:
-            music_data = music_suggester.suggest_music(style_data, platform)
-            music_suggestions[platform] = json.loads(music_data) if isinstance(music_data, str) else music_data
+            if settings.COST_SAVE_MODE:
+                mood_key = str(style_data.get("mood", "peaceful")).lower()
+                tracks = MUSIC_MOOD_MAP.get(mood_key, MUSIC_MOOD_MAP["peaceful"])
+                music_suggestions[platform] = {
+                    "tracks": tracks,
+                    "platform_recommendation": f"Static BGM picks for {platform} (cost-save mode)",
+                }
+            else:
+                music_data = music_suggester.suggest_music(style_data, platform)
+                music_suggestions[platform] = json.loads(music_data) if isinstance(music_data, str) else music_data
         except (json.JSONDecodeError, TypeError):
             music_suggestions[platform] = {"tracks": [], "platform_recommendation": ""}
 

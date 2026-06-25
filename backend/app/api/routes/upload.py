@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ...core.database import get_db
 from ...core.auth import get_current_user
+from ...core.config import settings
 from ...models.user import User
 from ...models.job import Job
 from ...workers.tasks import process_job_sync, register_cancel_flag
@@ -17,6 +18,32 @@ router = APIRouter()
 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+@router.get("/default-directions")
+async def get_default_video_directions():
+    """
+    Danh sách kịch bản video mặc định khi người dùng không nhập mô tả.
+    """
+    from ...services.default_video_directions import (
+        DEFAULT_VIDEO_DIRECTIONS,
+        preview_default_for_variation,
+    )
+    return {
+        "message": "Khi không nhập mô tả, mỗi video variation tự chọn một kịch bản phù hợp.",
+        "directions": [
+            {
+                "key": d["key"],
+                "label_vi": d["label_vi"],
+                "prompt_vi": d["prompt_vi"],
+            }
+            for d in DEFAULT_VIDEO_DIRECTIONS
+        ],
+        "preview": {
+            "variation_1": preview_default_for_variation(0),
+            "variation_2": preview_default_for_variation(1),
+        },
+    }
 
 
 @router.post("/upload")
@@ -53,6 +80,10 @@ async def upload_image(
 
     video_duration = max(3, min(15, video_duration))
     max_video_variations = max(1, min(2, max_video_variations))
+
+    if settings.COST_SAVE_MODE:
+        max_video_variations = 1
+        video_duration = min(video_duration, 5)
 
     # Save file
     file_ext = image.filename.split(".")[-1] if image.filename else "jpg"

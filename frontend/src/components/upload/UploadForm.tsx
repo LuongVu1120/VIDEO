@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Upload, ImageIcon, Video, Hash, Send, Lightbulb, AlertTriangle } from "lucide-react";
@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
 import { useJobStore } from "@/store/job-store";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 const MAX_DESC = 300;
 
@@ -30,26 +31,46 @@ function isOffTopic(text: string): boolean {
 }
 
 const EXAMPLE_HINTS = [
-  "Phong cách Japandi tối giản, vật liệu gỗ tự nhiên và bê tông, ánh sáng trắng ban ngày",
-  "Biệt thự nhiệt đới hiện đại, nhấn mạnh cây xanh và hồ bơi, tone màu xanh lá",
-  "Nội thất luxury màu trung tính, đèn vàng ấm, hướng đến khách hàng cao cấp",
-  "Mặt tiền công trình thương mại, phong cách industrial, ánh nắng vàng chiều",
+  "Phong cách Japandi tối giản, vật liệu gỗ tự nhiên và bê tông, ánh sáng ban ngày mềm",
+  "Biệt thự nhiệt đới hiện đại, nhấn cây xanh và hồ bơi, tone xanh lá",
+  "Nội thất luxury màu trung tính, đèn vàng ấm, khách hàng cao cấp",
+  "Mặt tiền công trình thương mại industrial, ánh nắng vàng chiều",
 ];
+
+type DefaultDirection = {
+  key: string;
+  label_vi: string;
+  prompt_vi: string;
+};
 
 export function UploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [numImages, setNumImages] = useState<number>(2);
+  const [numImages, setNumImages] = useState<number>(0);
   const [generateVideo, setGenerateVideo] = useState(true);
   const [videoDuration, setVideoDuration] = useState(5);
   const [maxVideoVariations, setMaxVideoVariations] = useState(1);
+  const [economyMode, setEconomyMode] = useState(true);
   const [platforms, setPlatforms] = useState<string[]>(["instagram"]);
   const [autoPost, setAutoPost] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [userDescription, setUserDescription] = useState("");
+  const [autoDirections, setAutoDirections] = useState<DefaultDirection[]>([]);
+  const [autoPreviewLabel, setAutoPreviewLabel] = useState<string>("");
   const router = useRouter();
   const { toast } = useToast();
   const { uploadImage, isUploading } = useJobStore();
+
+  useEffect(() => {
+    api.getDefaultVideoDirections()
+      .then((data) => {
+        setAutoDirections(data.directions);
+        setAutoPreviewLabel(data.preview.variation_1.label_vi);
+      })
+      .catch(() => {
+        setAutoPreviewLabel("Ngày → đêm, chuyển mùa, room-in / room-out…");
+      });
+  }, []);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -77,12 +98,30 @@ export function UploadForm() {
   };
 
   const togglePlatform = (platform: string) => {
+    if (economyMode) return;
     setPlatforms((prev) =>
       prev.includes(platform)
         ? prev.filter((p) => p !== platform)
         : [...prev, platform]
     );
   };
+
+  const applyEconomyMode = (enabled: boolean) => {
+    setEconomyMode(enabled);
+    if (enabled) {
+      setNumImages(0);
+      setMaxVideoVariations(1);
+      setVideoDuration(5);
+      setPlatforms(["instagram"]);
+      setGenerateVideo(true);
+    }
+  };
+
+  const estimatedCostUsd =
+    generateVideo
+      ? 0.08 + maxVideoVariations * (videoDuration <= 5 ? 0.21 : 0.21 + (videoDuration - 5) * 0.042) +
+        numImages * (economyMode ? 0.02 : 0.04)
+      : numImages * (economyMode ? 0.02 : 0.04);
 
   const handleVideoDurationChange = (value: string) => {
     const next = Number.parseInt(value, 10);
@@ -215,7 +254,7 @@ export function UploadForm() {
             <span className="text-sm font-normal text-neutral-400">(tuỳ chọn)</span>
           </CardTitle>
           <CardDescription>
-            Cho AI biết bạn muốn nhấn mạnh điều gì — phong cách, vật liệu, ánh sáng, đối tượng khách hàng.
+            Tuỳ chọn — để trống thì AI tự chọn kịch bản video sinh động (ngày/đêm, mùa, room-in/out, drone orbit…).
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -223,7 +262,7 @@ export function UploadForm() {
             <textarea
               value={userDescription}
               onChange={(e) => setUserDescription(e.target.value.slice(0, MAX_DESC))}
-              placeholder="Ví dụ: Tôi muốn phong cách Japandi hiện đại, vật liệu gỗ tự nhiên và bê tông thô, ánh sáng ban ngày mềm mại. Video hướng đến khách hàng trung-cao cấp quan tâm đến thiết kế tối giản."
+              placeholder="Để trống = AI tự chọn (vd: ngày→đêm, xuân→hè, từ trong ra ngoài, drone orbit…). Hoặc mô tả phong cách, ánh sáng, chuyển camera bạn muốn."
               rows={3}
               className={cn(
                 "w-full resize-none rounded-md border px-3 py-2 text-sm outline-none transition-colors",
@@ -245,6 +284,13 @@ export function UploadForm() {
             </span>
           </div>
 
+          {!userDescription.trim() && autoPreviewLabel && (
+            <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-xs text-sky-800 dark:border-sky-900 dark:bg-sky-950/40 dark:text-sky-300">
+              <span className="font-medium">Tự động khi để trống:</span> {autoPreviewLabel}
+              {maxVideoVariations > 1 && " · Variation 2 sẽ dùng kịch bản khác"}
+            </div>
+          )}
+
           {/* Off-topic warning */}
           {isOffTopic(userDescription) && (
             <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
@@ -255,9 +301,35 @@ export function UploadForm() {
             </div>
           )}
 
-          {/* Example chips */}
+          {/* Cinematic direction chips */}
+          {autoDirections.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-xs text-neutral-400">Kịch bản video kiến trúc — nhấn để dùng:</p>
+              <div className="flex flex-wrap gap-2">
+                {autoDirections.map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => setUserDescription(d.prompt_vi.slice(0, MAX_DESC))}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs transition-colors",
+                      "border-sky-200 bg-sky-50 text-sky-800",
+                      "hover:border-sky-400 hover:bg-sky-100",
+                      "dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300",
+                      userDescription === d.prompt_vi.slice(0, MAX_DESC) &&
+                        "border-sky-600 bg-sky-600 text-white dark:bg-sky-500"
+                    )}
+                  >
+                    {d.label_vi}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Style example chips */}
           <div className="space-y-1.5">
-            <p className="text-xs text-neutral-400">Ví dụ gợi ý — nhấn để dùng:</p>
+            <p className="text-xs text-neutral-400">Gợi ý phong cách — nhấn để dùng:</p>
             <div className="flex flex-wrap gap-2">
               {EXAMPLE_HINTS.map((hint) => (
                 <button
@@ -288,6 +360,23 @@ export function UploadForm() {
           <CardDescription>Customize how your content will be created</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Economy mode */}
+          <div className="flex items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/30 px-4 py-3">
+            <div className="space-y-0.5">
+              <Label className="text-emerald-900 dark:text-emerald-100">Chế độ tiết kiệm</Label>
+              <p className="text-xs text-emerald-800/80 dark:text-emerald-300/80">
+                Video từ ảnh upload, 1 video 5s, không tạo ảnh AI, caption 1 nền tảng
+              </p>
+            </div>
+            <Button
+              variant={economyMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => applyEconomyMode(!economyMode)}
+            >
+              {economyMode ? "Bật" : "Tắt"}
+            </Button>
+          </div>
+
           {/* Number of Images */}
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
@@ -312,6 +401,7 @@ export function UploadForm() {
                   key={value}
                   variant={numImages === value ? "default" : "outline"}
                   size="sm"
+                  disabled={economyMode && value > 0}
                   onClick={() => setNumImages(value)}
                 >
                   {label}
@@ -350,6 +440,7 @@ export function UploadForm() {
                     key={n}
                     variant={maxVideoVariations === n ? "default" : "outline"}
                     size="sm"
+                    disabled={economyMode && n > 1}
                     onClick={() => setMaxVideoVariations(n)}
                   >
                     {n}
@@ -370,6 +461,7 @@ export function UploadForm() {
                   min={3}
                   max={15}
                   value={videoDuration}
+                  disabled={economyMode}
                   onChange={(e) => handleVideoDurationChange(e.target.value)}
                   className="w-20 text-right"
                 />
@@ -377,9 +469,9 @@ export function UploadForm() {
               </div>
             </div>
             <p className="text-xs text-neutral-500 rounded-md bg-neutral-50 dark:bg-neutral-900 px-3 py-2 border border-neutral-200 dark:border-neutral-800">
-              Ước tính video fal: ~
-              {(maxVideoVariations === 1 ? 0.21 : 0.42).toFixed(2)}$
-              {" "}(1×5s Turbo) — trước đây 2×O3 5s ≈ $0.84/job.
+              Ước tính job này: ~${estimatedCostUsd.toFixed(2)} USD
+              {economyMode && " (tiết kiệm)"} — video fal Kling Turbo 5s ≈ $0.21/clip.
+              Trước đây 2 ảnh + 2 video O3 ≈ $1.0+/job.
             </p>
             </>
           )}
@@ -396,6 +488,7 @@ export function UploadForm() {
                   key={platform}
                   variant={platforms.includes(platform) ? "default" : "outline"}
                   size="sm"
+                  disabled={economyMode && platform !== "instagram"}
                   onClick={() => togglePlatform(platform)}
                   className="capitalize"
                 >
