@@ -115,6 +115,7 @@ export function OutputGallery({ jobId }: { jobId: string }) {
   const [imageRegen, setImageRegen] = useState<ImageRegenState | null>(null);
   const [trim, setTrim] = useState<TrimState | null>(null);
   const [publishing, setPublishing] = useState<string | null>(null);
+  const [publishingAll, setPublishingAll] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => { loadOutput(); }, [jobId]);
@@ -206,6 +207,35 @@ export function OutputGallery({ jobId }: { jobId: string }) {
       });
     } finally {
       setPublishing(null);
+    }
+  }
+
+  async function publishToAll() {
+    if (!output?.video_url) {
+      toast({ title: "Cần có video", description: "Chưa có video để đăng YouTube. Tạo video trước.", variant: "destructive" });
+      return;
+    }
+    setPublishingAll(true);
+    try {
+      const [igResult, ytResult] = await Promise.allSettled([
+        api.publishToSocial(jobId, "instagram"),
+        api.publishToSocial(jobId, "youtube"),
+      ]);
+      const lines: string[] = [];
+      if (igResult.status === "fulfilled") {
+        lines.push(`Instagram: ${igResult.value.post_url ?? "Đã đăng"}`);
+      } else {
+        lines.push(`Instagram: Thất bại`);
+      }
+      if (ytResult.status === "fulfilled") {
+        const url = ytResult.value.shorts_url ?? ytResult.value.post_url ?? "Đã đăng";
+        lines.push(`YouTube: ${url}`);
+      } else {
+        lines.push(`YouTube: Thất bại`);
+      }
+      toast({ title: "Đăng bài hoàn tất", description: lines.join("\n") });
+    } finally {
+      setPublishingAll(false);
     }
   }
 
@@ -531,6 +561,57 @@ export function OutputGallery({ jobId }: { jobId: string }) {
         {/* ── Captions Tab ───────────────────────────────────────────────── */}
         <TabsContent value="captions">
           <div className="space-y-6">
+            {/* Quick publish buttons */}
+            <Card className="border-neutral-200 dark:border-neutral-800">
+              <CardContent className="p-4">
+                <p className="text-sm font-medium mb-3">Đăng nhanh</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
+                    disabled={publishingAll || publishing !== null}
+                    onClick={() => publishToPlatform("instagram")}
+                  >
+                    {publishing === "instagram" ? (
+                      <><div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" /> Đang đăng...</>
+                    ) : (
+                      <><Camera className="h-4 w-4 mr-2" /> Đăng Instagram</>
+                    )}
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    disabled={publishingAll || publishing !== null || !output.video_url}
+                    title={output.video_url ? "Upload lên YouTube Shorts" : "Cần có video để đăng YouTube"}
+                    onClick={() => publishToPlatform("youtube")}
+                  >
+                    {publishing === "youtube" ? (
+                      <><div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" /> Đang đăng...</>
+                    ) : (
+                      <><Clapperboard className="h-4 w-4 mr-2" /> Đăng YouTube</>
+                    )}
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={publishingAll || publishing !== null}
+                    onClick={publishToAll}
+                  >
+                    {publishingAll ? (
+                      <><div className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent mr-2" /> Đang đăng...</>
+                    ) : (
+                      "Đăng cả hai"
+                    )}
+                  </Button>
+                </div>
+                {!output.video_url && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">Chưa có video — YouTube bị tắt</p>
+                )}
+              </CardContent>
+            </Card>
+
             {Object.entries(output.captions).map(([platform, data]) => {
               const en = data?.en ?? (data as unknown as CaptionLang);
               const vi = data?.vi;

@@ -99,11 +99,18 @@ def _pick_post_image(output: Output) -> str | None:
 
 def _publish_sync(output: Output, platform: str) -> dict:
     captions = output.captions or {}
+    # Fallback: youtube can use instagram caption if no dedicated youtube caption
     if platform not in captions:
-        return {"status": "error", "error": f"No caption for platform: {platform}"}
+        fallback = "instagram" if platform == "youtube" else None
+        if fallback and fallback in captions:
+            caption_data_fallback = captions[fallback]
+        else:
+            return {"status": "error", "error": f"No caption for platform: {platform}"}
+    else:
+        caption_data_fallback = None
 
     poster = SocialPoster()
-    caption_data = captions[platform]
+    caption_data = caption_data_fallback if caption_data_fallback else captions[platform]
     image_path = _pick_post_image(output)
     video_path = output.video_url
 

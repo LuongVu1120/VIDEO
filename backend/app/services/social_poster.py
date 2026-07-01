@@ -330,12 +330,18 @@ class SocialPoster:
             local_video, cleanup = self._prepare_youtube_video_file(video_url)
             try:
                 formatted = self._format_caption(caption)
-                title = (caption.get("title") or "Architecture video")[:100]
+                raw_title = (caption.get("title") or "Architecture video")
+                # Ensure YouTube classifies this as a Short (vertical ≤60s)
+                title = (raw_title if "#Shorts" in raw_title else f"{raw_title} #Shorts")[:100]
                 tags = [
                     str(tag).lstrip("#")
                     for tag in caption.get("hashtags", [])
                     if str(tag).strip()
-                ][:30]
+                ]
+                if "Shorts" not in tags:
+                    tags.append("Shorts")
+                tags = tags[:30]
+                description = f"{formatted}\n\n#Shorts" if "#Shorts" not in formatted else formatted
 
                 youtube = build("youtube", "v3", credentials=creds)
                 media_type = mimetypes.guess_type(local_video)[0] or "video/mp4"
@@ -344,7 +350,7 @@ class SocialPoster:
                     body={
                         "snippet": {
                             "title": title,
-                            "description": formatted,
+                            "description": description,
                             "tags": tags,
                             "categoryId": settings.YOUTUBE_CATEGORY_ID,
                         },

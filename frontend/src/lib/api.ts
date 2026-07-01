@@ -146,6 +146,7 @@ class ApiClient {
       platform: string;
       status: string;
       post_url: string | null;
+      shorts_url: string | null;
       result: Record<string, unknown>;
     }>(`/outputs/${jobId}/publish`, {
       method: "POST",

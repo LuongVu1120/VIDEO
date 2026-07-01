@@ -39,3 +39,7 @@ docker-data/
 backend/arch_video.db
 backend/celery_data/
 backend/control/
+
+# YouTube OAuth secrets
+youtube_client_secret.json
+youtube_token.json
